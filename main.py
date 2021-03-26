@@ -5,7 +5,9 @@ board = Board.Board()
 board.setupBoard()
 
 board.moveStone([7, 0], [5, 0], -1)
-board.moveStone([0, 1], [5, 6], 1)
+board.moveStone([0, 1], [4, 5], 1)
+board.moveStone([7, 6], [5, 6], -1)
+board.moveStone([0, 3], [4, 3], 1)
 
 
 boardSize = 800
@@ -36,19 +38,9 @@ colorPalette = {
     7: (245, 132, 40, 255),  # Orange
 }
 
+
 def setAlpha(color, alpha):
     return (color[0], color[1], color[2], alpha)
-
-boardColors = [
-    [7, 2, 1, 4, 3, 6, 5, 0],
-    [6, 7, 4, 5, 2, 3, 0, 1],
-    [5, 4, 7, 6, 1, 0, 3, 2],
-    [4, 1, 2, 7, 0, 5, 6, 3],
-    [3, 6, 5, 0, 7, 2, 1, 4],
-    [2, 3, 0, 1, 6, 7, 4, 5],
-    [1, 0, 3, 2, 5, 4, 7, 6],
-    [0, 5, 6, 3, 4, 1, 2, 7],
-]
 
 img = Image.new('RGBA', (boardSize, boardSize))
 draw = ImageDraw.Draw(img)
@@ -56,7 +48,7 @@ draw = ImageDraw.Draw(img)
 for x in range(8):
     for y in range(8):
 
-        draw.rectangle([(x*cellSize, y*cellSize), ((x+1)*cellSize, (y+1)*cellSize)], fill=colorPalette[boardColors[x][y]], width=0)
+        draw.rectangle([(x*cellSize, y*cellSize), ((x+1)*cellSize, (y+1)*cellSize)], fill=colorPalette[board.boardColors[x][y]], width=0)
         if (board.board[y][x] != None):
             stone = board.board[y][x]
             draw.ellipse([(x*cellSize + pieceBounding, y*cellSize + pieceBounding), ((x+1)*cellSize - pieceBounding, (y+1)*cellSize - pieceBounding)], fill=shadowColor)

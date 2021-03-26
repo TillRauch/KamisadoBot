@@ -1,12 +1,26 @@
 import math
 import Stone
 
+
 class Board:
+    boardColors = [
+        [7, 2, 1, 4, 3, 6, 5, 0],
+        [6, 7, 4, 5, 2, 3, 0, 1],
+        [5, 4, 7, 6, 1, 0, 3, 2],
+        [4, 1, 2, 7, 0, 5, 6, 3],
+        [3, 6, 5, 0, 7, 2, 1, 4],
+        [2, 3, 0, 1, 6, 7, 4, 5],
+        [1, 0, 3, 2, 5, 4, 7, 6],
+        [0, 5, 6, 3, 4, 1, 2, 7],
+    ]
+
     board = []
     turn = 0
+    colorToMove = -1
 
     def __init__(self):
         self.turn = -1
+        self.colorToMove = -1
         for i in range(8):
             self.board.append([None, None, None, None, None, None, None, None])
 
@@ -19,8 +33,9 @@ class Board:
             self.board[7][y] = Stone.Stone(y, -1)
 
     def isMoveLegal(self, fromXy, toXy, side):
-        if (0 > fromXy[0] > 7 or 0 >fromXy[1] > 7 or 0 > toXy[0] > 7 or 0 > toXy[1] > 7):
+        if (fromXy[0] < 0 or fromXy[0] > 7 or fromXy[1] < 0 or fromXy[1] > 7 or toXy[0] < 0 or toXy[0] > 7 or toXy[1] < 0 or toXy[1] > 7):
             return [False, 'Position out of bounds']
+
         if (self.turn != side):
             return [False, 'Not your Turn']
 
@@ -30,7 +45,10 @@ class Board:
             return [False, 'No Stone there']
         if (stone.side != side):
             return [False, 'Stone from wrong Side']
-        if (fromXy[0] <= side * toXy[0]):
+        if (self.colorToMove != -1 and self.colorToMove != stone.color):
+            return [False, 'Wrong Color move']
+
+        if (side * fromXy[0] >= side * toXy[0]):
             return [False, 'Incorrect forward Movement']
         if (fromXy[1] != toXy[1]):
             if (abs(fromXy[1] - toXy[1]) != abs(fromXy[0] - toXy[0])):
@@ -47,21 +65,17 @@ class Board:
                 if (self.board[fromXy[0] + side * x][fromXy[1] + sign * x] != None):
                     return [False, 'Piece in-between']
 
-        return True
-
-
-
-
-
-
+        return [True, '']
 
     def moveStone(self, fromXy, toXy, player):
         moveLegal = self.isMoveLegal(fromXy, toXy, player)
-        if True:
+        if moveLegal[0]:
             self.board[toXy[0]][toXy[1]] = self.board[fromXy[0]][fromXy[1]]
             self.board[fromXy[0]][fromXy[1]] = None
 
             self.turn *= -1
+            # TODO: Rotate Board
+            self.colorToMove = self.boardColors[toXy[1]][toXy[0]]
         else:
             raise Exception("Move-Error: " + moveLegal[1])
 
