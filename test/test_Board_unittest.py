@@ -12,6 +12,16 @@ class TestBoard(unittest.TestCase):
     presetBoard.moveStone([7, 6], [5, 6], -1)
     presetBoard.moveStone([0, 3], [4, 3], 1)
 
+    def test_getLegalMoves(self):
+        board = Board.Board()
+        board.setupBoard()
+
+        board.moveStone([7, 0], [6, 0], -1)
+
+        self.assertCountEqual(board.getLegalMoves(), [[1, 2], [2, 2], [3, 2], [4, 2], [5, 2], [6, 2],
+                                                      [1, 1], [2, 0],
+                                                      [1, 3], [2, 4], [3, 5], [4, 6], [5, 7]
+                                                      ])
 
     def test_someLegalMoves(self):
 
