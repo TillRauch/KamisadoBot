@@ -3,8 +3,10 @@ import Stone
 
 class Board:
     board = []
+    turn = 0
 
     def __init__(self):
+        self.turn = -1
         for i in range(8):
             self.board.append([None, None, None, None, None, None, None, None])
 
@@ -16,16 +18,11 @@ class Board:
             self.board[0][7 - y] = Stone.Stone(y, 1)
             self.board[7][y] = Stone.Stone(y, -1)
 
-
-
-
-    def setStone(self, xy, stone):
-        self.board[xy[0]][xy[1]] = stone
-
     def isMoveLegal(self, fromXy, toXy, side):
         if (0 > fromXy[0] > 7 or 0 >fromXy[1] > 7 or 0 > toXy[0] > 7 or 0 > toXy[1] > 7):
-            # Illegal: Position out of bounds
-            return False
+            return [False, 'Position out of bounds']
+        if (self.turn != side):
+            return [False, 'Not your Turn']
 
         stone = self.board[fromXy[0]][fromXy[1]]
 
@@ -33,7 +30,7 @@ class Board:
             return [False, 'No Stone there']
         if (stone.side != side):
             return [False, 'Stone from wrong Side']
-        if (fromXy[0] >= side * toXy[0]):
+        if (fromXy[0] <= side * toXy[0]):
             return [False, 'Incorrect forward Movement']
         if (fromXy[1] != toXy[1]):
             if (abs(fromXy[1] - toXy[1]) != abs(fromXy[0] - toXy[0])):
@@ -58,13 +55,13 @@ class Board:
 
 
 
-    def moveStone(self, fromXy, toXy):
-        self.board[toXy[0]][toXy[1]] = self.board[fromXy[0]][fromXy[1]]
-        self.board[fromXy[0]][fromXy[1]] = None
+    def moveStone(self, fromXy, toXy, player):
+        moveLegal = self.isMoveLegal(fromXy, toXy, player)
+        if True:
+            self.board[toXy[0]][toXy[1]] = self.board[fromXy[0]][fromXy[1]]
+            self.board[fromXy[0]][fromXy[1]] = None
 
+            self.turn *= -1
+        else:
+            raise Exception("Move-Error: " + moveLegal[1])
 
-
-
-board = Board()
-
-print(board.board)
