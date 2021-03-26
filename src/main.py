@@ -4,11 +4,7 @@ from src import Board
 board = Board.Board()
 board.setupBoard()
 
-board.moveStone([7, 0], [5, 0], -1)
-board.moveStone([0, 1], [1, 2], 1)
-board.moveStone([7, 4], [5, 2], -1)
-board.moveStone([0, 7], [1, 7], 1)
-board.moveStone([7, 5], [4, 5], -1)
+board.moveStone([7, 0], [6, 0], -1)
 
 
 boardSize = 800
