@@ -5,9 +5,10 @@ board = Board.Board()
 board.setupBoard()
 
 board.moveStone([7, 0], [5, 0], -1)
-board.moveStone([0, 1], [4, 5], 1)
-board.moveStone([7, 6], [5, 6], -1)
-board.moveStone([0, 3], [4, 3], 1)
+board.moveStone([0, 1], [1, 2], 1)
+board.moveStone([7, 4], [5, 2], -1)
+board.moveStone([0, 7], [1, 7], 1)
+board.moveStone([7, 5], [4, 5], -1)
 
 
 boardSize = 800
@@ -59,4 +60,4 @@ for x in range(8):
             draw.ellipse([(x*cellSize + colorBounding - shadowOffset, y*cellSize + colorBounding - shadowOffset), ((x+1)*cellSize - colorBounding - shadowOffset, (y+1)*cellSize - colorBounding - shadowOffset)], fill=colorPalette[stone.color])
 
 del draw
-img.save('image.png')
+img.save('test_image.png')
