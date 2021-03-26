@@ -1,5 +1,5 @@
 import math
-import Stone
+from ..src import Stone
 
 
 class Board:

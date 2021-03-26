@@ -1,5 +1,5 @@
 from PIL import Image, ImageDraw
-import Board
+from src import Board
 
 board = Board.Board()
 board.setupBoard()
