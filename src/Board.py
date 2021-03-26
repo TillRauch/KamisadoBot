@@ -45,6 +45,8 @@ class Board:
             return [False, 'No Stone there']
         if (stone.side != side):
             return [False, 'Stone from wrong Side']
+        if (self.board[toXy[0]][toXy[1]] != None):
+            return [False, 'No moving onto Stone']
         if (self.colorToMove != -1 and self.colorToMove != stone.color):
             return [False, 'Wrong Color move']
 
@@ -79,3 +81,19 @@ class Board:
         else:
             raise Exception("Move-Error: " + moveLegal[1])
 
+    def getStonePosition(self, color, side):
+        for x in range(8):
+            for y in range(8):
+                stone = self.board[x][y]
+                if (stone != None and stone.color == color and stone.side == side):
+                    return [x, y]
+
+    def getLegalMoves(self):
+        legalMoves = []
+        stonePosition = self.getStonePosition(self.colorToMove, self.turn)
+
+        for x in range(1, (8 - stonePosition[0] if self.turn == 1 else stonePosition[0])):
+            for i in range(-1, 2, 1):
+                if self.isMoveLegal(stonePosition, [stonePosition[0] + self.turn * x, stonePosition[1] + i * x], self.turn)[0]:
+                    legalMoves.append([stonePosition[0] + self.turn * x, stonePosition[1] + i * x])
+        return legalMoves

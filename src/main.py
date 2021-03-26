@@ -59,5 +59,8 @@ for x in range(8):
             draw.ellipse([(x*cellSize + pieceBounding - shadowOffset, y*cellSize + pieceBounding - shadowOffset), ((x+1)*cellSize - pieceBounding - shadowOffset, (y+1)*cellSize - pieceBounding - shadowOffset)], fill=sideColors[stone.side])
             draw.ellipse([(x*cellSize + colorBounding - shadowOffset, y*cellSize + colorBounding - shadowOffset), ((x+1)*cellSize - colorBounding - shadowOffset, (y+1)*cellSize - colorBounding - shadowOffset)], fill=colorPalette[stone.color])
 
+for legalMove in board.getLegalMoves():
+    y, x = legalMove
+    draw.ellipse([(x*cellSize + pieceBounding, y*cellSize + pieceBounding), ((x+1)*cellSize - pieceBounding, (y+1)*cellSize - pieceBounding)], outline=(255, 255, 255, 255), fill=None, width=5)
 del draw
 img.save('test_image.png')
