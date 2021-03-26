@@ -18,11 +18,15 @@ pieceBounding = cellSize * (1 - pieceRatio)
 colorBounding = pieceBounding * (1/colorRatio)
 
 shadowOffset = 5
-shadowColor = (80, 80, 80, 255)
 
 sideColors = {
     -1: (255, 255, 255, 255),
     1: (0, 0, 0, 255)
+}
+
+shadowColors = {
+    -1: (80, 80, 80, 255),
+    1: (120, 120, 120, 255)
 }
 
 pieceColor = (255, 0, 0, 255)
@@ -47,11 +51,10 @@ draw = ImageDraw.Draw(img)
 
 for x in range(8):
     for y in range(8):
-
         draw.rectangle([(x*cellSize, y*cellSize), ((x+1)*cellSize, (y+1)*cellSize)], fill=colorPalette[board.boardColors[x][y]], width=0)
         if (board.board[y][x] != None):
             stone = board.board[y][x]
-            draw.ellipse([(x*cellSize + pieceBounding, y*cellSize + pieceBounding), ((x+1)*cellSize - pieceBounding, (y+1)*cellSize - pieceBounding)], fill=shadowColor)
+            draw.ellipse([(x*cellSize + pieceBounding, y*cellSize + pieceBounding), ((x+1)*cellSize - pieceBounding, (y+1)*cellSize - pieceBounding)], fill=shadowColors[stone.side])
             draw.ellipse([(x*cellSize + pieceBounding - shadowOffset, y*cellSize + pieceBounding - shadowOffset), ((x+1)*cellSize - pieceBounding - shadowOffset, (y+1)*cellSize - pieceBounding - shadowOffset)], fill=sideColors[stone.side])
             draw.ellipse([(x*cellSize + colorBounding - shadowOffset, y*cellSize + colorBounding - shadowOffset), ((x+1)*cellSize - colorBounding - shadowOffset, (y+1)*cellSize - colorBounding - shadowOffset)], fill=colorPalette[stone.color])
 
