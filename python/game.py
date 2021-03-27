@@ -1,4 +1,8 @@
-from itertools import product
+import draw
+
+
+class GameException(Exception):
+    pass
 
 
 class Board:
@@ -13,9 +17,14 @@ class Board:
         [0, 1, 2, 3, 4, 5, 6, 7]
     ]
 
+    @staticmethod
+    def get_color(pos):
+        return Board.BOARD_COLORS[pos[0]][pos[1]]
+
     def __init__(self):
         self.turn_count = 0
         self.current_player = 0
+        self.winner = None
         self.current_color = None
         self.fst_stones = [(7, i) for i in range(8)]
         self.snd_stones = [(0, i) for i in range(8)]
@@ -29,7 +38,7 @@ class Board:
         return all(0 <= coord < len(self.board) for coord in pos)
 
     def direction(self):
-        return -1 if self.current_player == 0 else 1
+        return (-1, 1)[self.current_player]
 
     def is_occupied(self, pos):
         return self.board[pos[0]][pos[1]]
@@ -43,40 +52,52 @@ class Board:
     def check_move(self, start_pos, target_pos):
         assert self.is_occupied(start_pos), 'inconsistent state'
         if self.is_occupied(target_pos):
-            raise Exception('No moving onto Stone')
+            raise GameException('No moving onto stone')
         if self.direction() * (target_pos[0] - start_pos[0]) <= 0:
-            raise Exception('Incorrect forward Movement')
+            raise GameException('Incorrect forward movement')
         row_path = range(start_pos[0] + self.direction(), target_pos[0], self.direction())
         # if line straight
         if start_pos[1] == target_pos[1]:
             col_path = [start_pos[1]] * len(row_path)
         else:
             if abs(start_pos[1] - target_pos[1]) != abs(start_pos[0] - target_pos[0]):
-                raise Exception('Move not along diagonal')
+                raise GameException('Move not along diagonal')
             diag_direction = 1 if target_pos[1] > start_pos[1] else -1
             col_path = range(start_pos[1] + diag_direction, target_pos[1], diag_direction)
         if any(self.board[row][col] for row, col in zip(row_path, col_path)):
-            raise Exception('Piece in-between')
+            raise GameException('Piece in-between')
 
-    def move_stone(self, target_pos, color=None):
-        if color is None:
-            color = self.current_color
-        else:
-            assert self.turn_count == 0  # or color == self.current_color
-        stone_pos = self.stones[self.current_player][color]
+    def set_color(self, color):
+        if self.turn_count > 0:
+            raise GameException('Can only set color on first turn')
+        self.current_color = color
+
+    def move_stone(self, target_pos):
+        if self.current_color is None:
+            raise GameException('Must set a color first')
+        stone_pos = self.stones[self.current_player][self.current_color]
         self.check_move(stone_pos, target_pos)
         self.unoccupy(stone_pos)
         self.occupy(target_pos)
-        self.stones[self.current_player][color] = target_pos
-        self.current_player = 1 - self.current_player
-        self.current_color = self.BOARD_COLORS[target_pos[0]][target_pos[1]]
+        self.stones[self.current_player][self.current_color] = target_pos
+        self.current_color = Board.get_color(target_pos)
         self.turn_count += 1
+        if target_pos[0] == 7 * self.current_player:
+            self.winner = self.current_player
+        else:
+            self.current_player = 1 - self.current_player
+            if not self.get_legal_moves():
+                # skip move
+                pos = self.stones[self.current_player][self.current_color]
+                self.current_color = Board.get_color(pos)
+                self.current_player = 1 - self.current_player
 
     def get_legal_moves(self):
-        legal_moves = []
-        if self.turn_count == 0:
-            return [(row, col) for row, col in product(range(1, 7), range(8))]
+        # if game over or color has not been set
+        if self.winner is not None or self.current_color is None:
+            return []
         stone_pos = self.stones[self.current_player][self.current_color]
+        legal_moves = []
         current_pos = stone_pos
         for diag_direction in (-1, 0, 1):
             while True:
@@ -88,6 +109,9 @@ class Board:
                     current_pos = stone_pos
                     break
         return legal_moves
+
+    def draw(self):
+        return draw.draw_board(self)
 
 
 if __name__ == '__main__':
