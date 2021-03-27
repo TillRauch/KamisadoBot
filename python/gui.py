@@ -30,7 +30,7 @@ def run():
             if pos in board.get_legal_moves():
                 board.move_stone(pos)
                 draw_board()
-    font = pygame.font.SysFont('Arial', 100)
+    font = pygame.font.SysFont('Arial', 100, True)
     text = font.render(f'{board.get_player_name(board.winner)} has won', True, (200, ) * 3)
     window.blit(text, (BOARD_PIXELS / 2 - text.get_width() // 2,
                        BOARD_PIXELS / 2 - text.get_height() // 2))
