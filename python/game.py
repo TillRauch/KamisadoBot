@@ -5,6 +5,9 @@ class GameException(Exception):
     pass
 
 
+BLEN = 8
+
+
 class Board:
     BOARD_COLORS = [
         [7, 6, 5, 4, 3, 2, 1, 0],
@@ -21,21 +24,22 @@ class Board:
     def get_color(pos):
         return Board.BOARD_COLORS[pos[0]][pos[1]]
 
+    @staticmethod
+    def is_in_bounds(pos):
+        return all(0 <= coord < BLEN for coord in pos)
+
     def __init__(self):
         self.turn_count = 0
         self.current_player = 0
         self.winner = None
         self.current_color = None
-        self.fst_stones = [(7, i) for i in range(8)]
-        self.snd_stones = [(0, i) for i in range(8)]
+        self.fst_stones = [(BLEN - 1, i) for i in range(BLEN)]
+        self.snd_stones = [(0, i) for i in range(BLEN)]
         self.snd_stones.reverse()
         self.stones = (self.fst_stones, self.snd_stones)
-        self.board = [[False] * 8 for i in range(6)]
-        self.board.insert(0, [True] * 8)
-        self.board.append([True] * 8)
-
-    def is_in_bounds(self, pos):
-        return all(0 <= coord < len(self.board) for coord in pos)
+        self.board = [[False] * BLEN for i in range(BLEN - 2)]
+        self.board.insert(0, [True] * BLEN)
+        self.board.append([True] * BLEN)
 
     def direction(self):
         return (-1, 1)[self.current_player]
@@ -82,7 +86,7 @@ class Board:
         self.stones[self.current_player][self.current_color] = target_pos
         self.current_color = Board.get_color(target_pos)
         self.turn_count += 1
-        if target_pos[0] == 7 * self.current_player:
+        if target_pos[0] == (BLEN - 1) * self.current_player:
             self.winner = self.current_player
         else:
             self.current_player = 1 - self.current_player
