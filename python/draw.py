@@ -7,14 +7,11 @@ CELL_PIXELS = 100
 PIECE_RATIO = .8
 COLOR_RATIO = .4
 SHADOW_RATIO = .05
-BOUNDING_RATIO = .1
 
 BOARD_PIXELS = CELL_PIXELS * 8
 COLOR_BOUNDING = int(CELL_PIXELS / 2 * (1 - COLOR_RATIO))
 PIECE_BOUNDING = int(CELL_PIXELS / 2 * (1 - PIECE_RATIO))
 SHADOW_PIXELS = int(SHADOW_RATIO * CELL_PIXELS)
-BOARD_BOUNDING = int(BOUNDING_RATIO * BOARD_PIXELS)
-ALL_PIXELS = BOARD_PIXELS + BOARD_BOUNDING
 
 PLAYER_COLORS = [(255, 255, 255), (0, 0, 0)]
 SHADOW_COLORS = [(80, 80, 80), (120, 120, 120)]
@@ -35,16 +32,11 @@ def draw_board(board):
         return tuple(v + constant for v in tup)
 
     def bounding_box(offset, bounding):
-        coords = (pos[1] * CELL_PIXELS + BOARD_BOUNDING // 2,
-                  pos[0] * CELL_PIXELS + BOARD_BOUNDING // 2)
+        coords = (pos[1] * CELL_PIXELS, pos[0] * CELL_PIXELS)
         return [tuple_add(coords, offset + bounding),
                 tuple_add(coords, offset - bounding + CELL_PIXELS)]
 
-    player_rgb = {
-        'White': (255, 255, 255),
-        'Black': (0, 0, 0)
-    }[board.get_player_name(board.current_player)]
-    img = Image.new('RGB', (ALL_PIXELS, ) * 2, color=player_rgb)
+    img = Image.new('RGB', (BOARD_PIXELS, ) * 2)
     draw = ImageDraw.Draw(img)
     for pos in product(range(8), repeat=2):
         draw.rectangle(bounding_box(0, 0), fill=COLORS[board.get_color(pos)], width=0)
@@ -54,10 +46,10 @@ def draw_board(board):
             draw.ellipse(bounding_box(-SHADOW_PIXELS, PIECE_BOUNDING), fill=PLAYER_COLORS[player])
             draw.ellipse(bounding_box(-SHADOW_PIXELS, COLOR_BOUNDING), fill=COLORS[color])
     for pos in board.get_legal_moves():
-        # player_rgb = {
-        #     'White': (255, 255, 255),
-        #     'Black': (0, 0, 0)
-        # }[board.get_player_name(board.current_player)]
+        player_rgb = {
+            'White': (255, 255, 255),
+            'Black': (0, 0, 0)
+        }[board.get_player_name(board.current_player)]
         draw.ellipse(bounding_box(0, PIECE_BOUNDING), fill=None, outline=player_rgb, width=5)
     del draw
     return img
