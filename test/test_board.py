@@ -32,9 +32,8 @@ def test_is_in_bounds():
 
 
 def test_illegal_moving_onto_stone():
-    with pytest.raises(Exception) as exception:
+    with pytest.raises(Exception, match='No moving onto Stone'):
         presetBoard.check_move(correctMoveTuple[0], (0, 0))
-        assert exception.value == 'No moving onto Stone'
 
 
 def test_is_occupied():
@@ -43,9 +42,8 @@ def test_is_occupied():
 
 
 def test_illegal_forward_movement_first():
-    with pytest.raises(Exception) as exception:
+    with pytest.raises(Exception, match='Incorrect forward Movement'):
         presetBoard.check_move(correctMoveTuple[0], (6, 0))
-        assert exception.value == 'Incorrect forward Movement'
 
 
 def test_illegal_forward_movement_second():
@@ -56,28 +54,25 @@ def test_illegal_forward_movement_second():
     board.move_stone((4, 3))
     board.move_stone((3, 0))
 
-    with pytest.raises(Exception) as exception:
+    with pytest.raises(Exception, match='Incorrect forward Movement'):
         board.check_move((4, 3), (2, 3))
-        assert exception.value == 'Incorrect forward Movement'
 
 
 def test_illegal_diagonal_movement():
-    with pytest.raises(Exception) as exception:
+    with pytest.raises(Exception, match='Move not along diagonal'):
         presetBoard.check_move(correctMoveTuple[0], (1, 1))
-        assert exception.value == 'Move not along diagonal'
 
 
 def test_illegal_move_over_stone_straight():
     board = game.Board()
     board.move_stone((5, 0), 0)
+    board.move_stone((1, 2))
+    board.move_stone((5, 2))
+    board.move_stone((1, 7))
     board.move_stone((4, 5))
-    board.move_stone((5, 6))
-    board.move_stone((4, 3))
-    board.move_stone((3, 0))
 
-    with pytest.raises(Exception) as exception:
-        board.check_move((6, 2))
-        assert exception.value == 'Piece in-between'
+    with pytest.raises(Exception, match='Piece in-between'):
+        board.check_move((1, 2), (6, 2))
 
 
 def test_illegal_move_over_stone_diagonal():
@@ -86,6 +81,5 @@ def test_illegal_move_over_stone_diagonal():
     board.move_stone((2, 3))
     board.move_stone((4, 5))
 
-    with pytest.raises(Exception) as exception:
-        board.check_move((5, 6))
-        assert exception.value == 'Piece in-between'
+    with pytest.raises(Exception, match='Piece in-between'):
+        board.check_move((2, 3), (5, 6))
