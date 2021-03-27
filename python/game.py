@@ -25,6 +25,10 @@ class Board:
         return Board.BOARD_COLORS[pos[0]][pos[1]]
 
     @staticmethod
+    def get_player_name(player):
+        return ('White', 'Black')[player]
+
+    @staticmethod
     def is_in_bounds(pos):
         return all(0 <= coord < BLEN for coord in pos)
 
