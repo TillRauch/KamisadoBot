@@ -8,7 +8,6 @@ def run():
         image = pygame.image.frombuffer(board.draw().tobytes(), (BOARD_PIXELS, ) * 2, 'RGB')
         window.blit(image, (0, 0))
         pygame.display.update()
-
     board = game.Board()
     # board.set_color(3)
     # board.move_stone((3, 3))
@@ -22,13 +21,16 @@ def run():
         if event.type == pygame.QUIT:
             break
         if event.type == pygame.MOUSEBUTTONDOWN:
-            pos = (event.pos[1] // CELL_PIXELS, event.pos[0] // CELL_PIXELS)
+            pos = event.pos[1] // CELL_PIXELS, event.pos[0] // CELL_PIXELS
             if board.current_color is None:
                 if pos[0] == 7:
                     board.set_color(pos[1])
                     draw_board()
-            if pos in board.get_legal_moves():
-                board.move_stone(pos)
+            else:
+                try:
+                    board.move_stone(pos)
+                except game.GameException:
+                    continue
                 draw_board()
     font = pygame.font.SysFont('Arial', 100, True)
     text = font.render(f'{board.get_player_name(board.winner)} has won', True, (200, ) * 3)
