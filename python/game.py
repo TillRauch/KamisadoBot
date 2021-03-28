@@ -38,8 +38,7 @@ class Board:
         self.winner = None
         self.current_color = None
         self.fst_stones = [(BLEN - 1, i) for i in range(BLEN)]
-        self.snd_stones = [(0, i) for i in range(BLEN)]
-        self.snd_stones.reverse()
+        self.snd_stones = list(reversed([(0, i) for i in range(BLEN)]))
         self.stones = (self.fst_stones, self.snd_stones)
         self.board = [[False] * BLEN for i in range(BLEN - 2)]
         self.board.insert(0, [True] * BLEN)
@@ -56,6 +55,36 @@ class Board:
 
     def unoccupy(self, pos):
         self.board[pos[0]][pos[1]] = False
+
+    def stone_order(self, player, col_direction):
+        col_index = 0 if col_direction == "r" else 1
+
+        pos_list = ([(BLEN - 1, i) for i in range(BLEN)], list(reversed([(0, i) for i in range(BLEN)])))[player]
+
+        if col_index == 0:
+            pos_list.reverse()
+
+        if player == 0:
+            col_index = 1 - col_index
+
+        def get_value(color):
+            pos = self.stones[player][color]
+
+            row_value = (BLEN - pos[0], pos[0])[player]
+            col_value = (pos[1], BLEN - pos[1])[col_index]
+
+            return row_value * BLEN + col_value
+
+        # index : position, value : color
+        stone_order = sorted(list(range(BLEN)), key=get_value)
+
+        pos_order = [0] * BLEN
+
+        for i in range(BLEN):
+            pos_order[stone_order[i]] = i
+        # index : color, value : position
+
+        return [pos_list[i] for i in pos_order]
 
     def check_move(self, start_pos, target_pos):
         assert self.is_occupied(start_pos), 'inconsistent state'
