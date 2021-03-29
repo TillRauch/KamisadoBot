@@ -20,8 +20,10 @@ class Board:
         [0, 1, 2, 3, 4, 5, 6, 7]
     ]
 
+    SUMO_ABILITIES = ((BLEN, 0), (5, 1), (3, 2), (1, 3))  # (max_range , power)
+
     @staticmethod
-    def get_color(pos):
+    def get_board_color(pos):
         return Board.BOARD_COLORS[pos[0]][pos[1]]
 
     @staticmethod
@@ -37,6 +39,7 @@ class Board:
         self.current_player = 0
         self.winner = None
         self.current_color = None
+        self.sumo_stages = ([0] * BLEN, [0] * BLEN)
         self.stones = [[(BLEN - 1, i) for i in range(BLEN)],
                        [(0, i) for i in reversed(range(BLEN))]]
         self.board = [[False] * BLEN for i in range(BLEN - 2)]
@@ -54,6 +57,14 @@ class Board:
 
     def unoccupy(self, pos):
         self.board[pos[0]][pos[1]] = False
+
+    def get_stone_color(self, pos):
+        if not self.is_occupied(pos):
+            raise GameException('Position is not occupied')
+
+        for player in (0, 1):
+            if pos in self.stones[player]:
+                return self.stones[player].index(pos)
 
     def reset_stones(self, from_right=False):
         def flip_stones(flip_row=False, flip_col=False):
@@ -86,6 +97,13 @@ class Board:
             col_path = range(start_pos[1] + diag_direction, target_pos[1], diag_direction)
         if any(self.board[row][col] for row, col in zip(row_path, col_path)):
             raise GameException('Piece in-between')
+        move_length = abs(start_pos[0] - target_pos[0])
+
+        print(move_length)
+        print(self.SUMO_ABILITIES[self.sumo_stages[self.current_player][self.get_stone_color(start_pos)]][0])
+
+        if move_length > self.SUMO_ABILITIES[self.sumo_stages[self.current_player][self.get_stone_color(start_pos)]][0]:
+            raise GameException('Move exceeds max range')
 
     def set_color(self, color):
         if self.turn_count > 0:
@@ -100,7 +118,7 @@ class Board:
         self.unoccupy(stone_pos)
         self.occupy(target_pos)
         self.stones[self.current_player][self.current_color] = target_pos
-        self.current_color = Board.get_color(target_pos)
+        self.current_color = Board.get_board_color(target_pos)
         self.turn_count += 1
         if target_pos[0] == (BLEN - 1) * self.current_player:
             self.winner = self.current_player
@@ -109,7 +127,7 @@ class Board:
             if not self.get_legal_moves():
                 # skip move
                 pos = self.stones[self.current_player][self.current_color]
-                self.current_color = Board.get_color(pos)
+                self.current_color = Board.get_board_color(pos)
                 self.current_player = 1 - self.current_player
 
     def get_legal_moves(self):

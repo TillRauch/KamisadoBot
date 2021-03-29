@@ -35,7 +35,7 @@ def draw_board(board):
     img = Image.new('RGB', (BOARD_PIXELS, ) * 2)
     draw = ImageDraw.Draw(img)
     for pos in product(range(8), repeat=2):
-        draw.rectangle(bounding_box(0, 0), fill=COLORS[board.get_color(pos)])
+        draw.rectangle(bounding_box(0, 0), fill=COLORS[board.get_board_color(pos)])
     for player, player_stones in enumerate(board.stones):
         for color, pos in enumerate(player_stones):
             draw.ellipse(bounding_box(0, PIECE_BOUNDING), fill=SHADOW_COLORS[player])
