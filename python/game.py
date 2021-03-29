@@ -55,20 +55,18 @@ class Board:
     def unoccupy(self, pos):
         self.board[pos[0]][pos[1]] = False
 
-    # from_right player perspective does not matter? black magic?
     def reset_stones(self, from_right=False):
         def flip_stones(flip_row=False, flip_col=False):
             return [(pos[0] * (1, -1)[flip_row],
                      pos[1] * (1, -1)[flip_col]) for pos in self.stones[player]]
-        for player in range(2):
-            if self.stones[player]:
-                stones = flip_stones(flip_row=not bool(player), flip_col=from_right)
-                # index : position, value : color
-                stone_order = sorted(list(range(BLEN)), key=lambda color: stones[color])
-                if from_right:
-                    stone_order.reverse()
-                start_row = (7, 0)[player]
-                self.stones[player] = [(start_row, stone_order.index(i)) for i in range(BLEN)]
+        for player in (0, 1):
+            stones = flip_stones(flip_row=not bool(player), flip_col=from_right)
+            sorted_colors = sorted(range(BLEN), key=stones.__getitem__)
+            if from_right:
+                sorted_colors.reverse()
+            start_row = (BLEN - 1, 0)[player]
+            for place, color in enumerate(sorted_colors):
+                self.stones[player][color] = start_row, place
             from_right = not from_right
 
     def check_move(self, start_pos, target_pos):
