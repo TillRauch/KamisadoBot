@@ -16,7 +16,7 @@ SHADOW_PIXELS = int(SHADOW_RATIO * CELL_PIXELS)
 
 SUMO_SPIKE_SIZE = 7
 SUMO_SPIKE_GROUP_COUNT = 4
-SUMO_SPIKE_OFFSET = 18 # in degrees
+SUMO_SPIKE_OFFSET = 18  # in degrees
 
 PLAYER_COLORS = [(255, 255, 255), (0, 0, 0)]
 SHADOW_COLORS = [(80, 80, 80), (120, 120, 120)]
@@ -38,41 +38,36 @@ def draw_board(board):
         return [tuple(v + offset + bounding for v in coords),
                 tuple(v + offset - bounding + CELL_PIXELS for v in coords)]
 
-    def bounding_circle(rotation, stone_radius, radius):
-        coords = (pos[1] * CELL_PIXELS, pos[0] * CELL_PIXELS)
-        center_coords = [v + CELL_PIXELS / 2 - SHADOW_PIXELS for v in coords]
-        center_coords[0] -= math.sin(rotation) * stone_radius
-        center_coords[1] -= math.cos(rotation) * stone_radius
+    def bounding_circle():
+        circle_radius = (CELL_PIXELS - PIECE_BOUNDING - COLOR_BOUNDING) / 2
+        crossing_cords = (pos[1] * CELL_PIXELS - math.sin(rotation) * circle_radius,
+                          pos[0] * CELL_PIXELS - math.cos(rotation) * circle_radius)
+        center_coords = tuple(v + CELL_PIXELS / 2 - SHADOW_PIXELS for v in crossing_cords)
+        return [center_coords, SUMO_SPIKE_SIZE]
 
-
-        return center_coords + [radius]
     img = Image.new('RGB', (BOARD_PIXELS, ) * 2)
     draw = ImageDraw.Draw(img)
     for pos in product(range(8), repeat=2):
         draw.rectangle(bounding_box(0, 0), fill=COLORS[board.get_board_color(pos)])
-    for player, player_stones in enumerate(board.stones):
-        for color, pos in enumerate(player_stones):
+    for player in (0, 1):
+        stones = board.players[player].stones
+        for color, pos in enumerate(stones):
             draw.ellipse(bounding_box(0, PIECE_BOUNDING), fill=SHADOW_COLORS[player])
             draw.ellipse(bounding_box(-SHADOW_PIXELS, PIECE_BOUNDING), fill=PLAYER_COLORS[player])
             draw.ellipse(bounding_box(-SHADOW_PIXELS, COLOR_BOUNDING), fill=COLORS[color])
-            sumo_count = board.sumo_stages[player][color]
-            for offset in range(sumo_count):
-                for group in range(SUMO_SPIKE_GROUP_COUNT):
-                    radians_rotation = offset * math.radians(SUMO_SPIKE_OFFSET) + group * math.pi / 2 - (sumo_count-1) * (math.radians(SUMO_SPIKE_OFFSET) / 2)
-                    draw.regular_polygon(bounding_circle(radians_rotation, 30, SUMO_SPIKE_SIZE), 3, rotation=math.degrees(radians_rotation), fill=PLAYER_COLORS[1-player])
-
-
-
-
-
-
-
-
+            sumo_level = board.players[player].sumo_levels[color]
+            for group, spike in product(range(SUMO_SPIKE_GROUP_COUNT), range(sumo_level)):
+                group_center = 2 * math.pi * group / SUMO_SPIKE_GROUP_COUNT
+                starting_offset = (sumo_level - 1) * math.radians(SUMO_SPIKE_OFFSET) / 2
+                spike_offset = spike * math.radians(SUMO_SPIKE_OFFSET)
+                rotation = group_center - starting_offset + spike_offset
+                draw.regular_polygon(bounding_circle(), 3, rotation=math.degrees(rotation),
+                                     fill=PLAYER_COLORS[1-player])
     for pos in board.get_legal_moves():
         player_rgb = {
             'White': (255, 255, 255),
             'Black': (0, 0, 0)
-        }[board.get_player_name(board.current_player)]
+        }[board.players[board.current_player].name]
         draw.ellipse(bounding_box(0, PIECE_BOUNDING), outline=player_rgb, width=5)
     del draw
     return img

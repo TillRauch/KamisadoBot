@@ -23,7 +23,7 @@ def test_get_legal_moves():
 
 def test_some_legal_moves():
     try:
-        presetBoard.check_move(correctMoveTuple[0], correctMoveTuple[1])
+        presetBoard._Board__check_path_clear(correctMoveTuple[0], correctMoveTuple[1])
     except game.GameException:
         pytest.fail('Legal moves raised an BoardException')
 
@@ -35,17 +35,17 @@ def test_is_in_bounds():
 
 def test_illegal_moving_onto_stone():
     with pytest.raises(game.GameException, match='No moving onto stone'):
-        presetBoard.check_move(correctMoveTuple[0], (0, 0))
+        presetBoard._Board__check_path_clear(correctMoveTuple[0], (0, 0))
 
 
 def test_is_occupied():
-    assert presetBoard.is_occupied((5, 0))
-    assert not presetBoard.is_occupied((6, 0))
+    assert presetBoard._Board__is_occupied((5, 0))
+    assert not presetBoard._Board__is_occupied((6, 0))
 
 
 def test_illegal_forward_movement_first():
     with pytest.raises(game.GameException, match='Incorrect forward movement'):
-        presetBoard.check_move(correctMoveTuple[0], (6, 0))
+        presetBoard._Board__check_path_clear(correctMoveTuple[0], (6, 0))
 
 
 def test_illegal_forward_movement_second():
@@ -58,12 +58,12 @@ def test_illegal_forward_movement_second():
     board.move_stone((3, 0))
 
     with pytest.raises(game.GameException, match='Incorrect forward movement'):
-        board.check_move((4, 3), (2, 3))
+        board._Board__check_path_clear((4, 3), (2, 3))
 
 
 def test_illegal_diagonal_movement():
     with pytest.raises(game.GameException, match='Move not along diagonal'):
-        presetBoard.check_move(correctMoveTuple[0], (1, 1))
+        presetBoard._Board__check_path_clear(correctMoveTuple[0], (1, 1))
 
 
 def test_illegal_move_over_stone_straight():
@@ -76,7 +76,7 @@ def test_illegal_move_over_stone_straight():
     board.move_stone((4, 5))
 
     with pytest.raises(game.GameException, match='Piece in-between'):
-        board.check_move((1, 2), (6, 2))
+        board._Board__check_path_clear((1, 2), (6, 2))
 
 
 def test_illegal_move_over_stone_diagonal():
@@ -87,59 +87,61 @@ def test_illegal_move_over_stone_diagonal():
     board.move_stone((4, 5))
 
     with pytest.raises(game.GameException, match='Piece in-between'):
-        board.check_move((2, 3), (5, 6))
+        board._Board__check_path_clear((2, 3), (5, 6))
+
 
 def test_illegal_move_too_long_white():
     board = game.Board()
     board.set_color(0)
 
-    board.sumo_stages[0][0] = 1
+    board.players[0].sumo_levels[0] = 1
 
     with pytest.raises(game.GameException, match='Move exceeds max range'):
-        board.check_move((7, 0), (1, 0))
+        board.move_stone((1, 0))
+
 
 def test_sumo_move_just_in_range():
     board = game.Board()
     board.set_color(0)
 
-    board.sumo_stages[0][0] = 1
+    board.players[0].sumo_levels[0] = 1
 
     try:
-        board.check_move((7, 0), (2, 0))
+        board.move_stone((2, 0))
     except game.GameException:
         pytest.fail('Legal moves raised an BoardException')
+
 
 def test_illegal_move_too_long_black():
     board = game.Board()
     board.set_color(0)
     board.move_stone((6, 1))
 
-    board.sumo_stages[1][0] = 1
+    board.players[1].sumo_levels[0] = 1
 
     with pytest.raises(game.GameException, match='Move exceeds max range'):
-        board.check_move((0, 7), (6, 7))
-
+        board.move_stone((6, 7))
 
 
 def test_reset_stones_from_left():
     board = game.Board()
 
-    board.stones = [[(7, 0), (7, 1), (7, 2), (6, 0), (6, 1), (6, 2), (0, 0), (1, 0)],
-                    [(0, 7), (0, 6), (1, 7), (1, 6), (0, 5), (0, 4), (0, 3), (0, 2)]]
+    board.players[0].stones = [(7, 0), (7, 1), (7, 2), (6, 0), (6, 1), (6, 2), (0, 0), (1, 0)]
+    board.players[1].stones = [(0, 7), (0, 6), (1, 7), (1, 6), (0, 5), (0, 4), (0, 3), (0, 2)]
 
-    board.reset_stones(from_right=False)
-    assert board.stones == [[(7, 0), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 7), (7, 6)],
-                            [(0, 7), (0, 6), (0, 1), (0, 0), (0, 5), (0, 4), (0, 3), (0, 2)]]
+    board._Board__reset_stones(from_right=False)
+    assert board.players[0].stones == [(7, 0), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 7), (7, 6)]
+    assert board.players[1].stones == [(0, 7), (0, 6), (0, 1), (0, 0), (0, 5), (0, 4), (0, 3), (0, 2)]
 
 
 def test_reset_stones_from_right():
     board = game.Board()
 
-    board.stones = [[(7, 0), (7, 1), (7, 2), (6, 0), (6, 1), (6, 2), (0, 0), (1, 0)],
-                    [(0, 7), (0, 6), (1, 7), (1, 6), (0, 5), (0, 4), (0, 3), (0, 2)]]
+    board.players[0].stones = [(7, 0), (7, 1), (7, 2), (6, 0), (6, 1), (6, 2), (0, 0), (1, 0)]
+    board.players[1].stones = [(0, 7), (0, 6), (1, 7), (1, 6), (0, 5), (0, 4), (0, 3), (0, 2)]
 
-    board.reset_stones(from_right=True)
-    assert board.stones == [[(7, 5), (7, 6), (7, 7), (7, 2), (7, 3), (7, 4), (7, 0), (7, 1)],
-                            [(0, 5), (0, 4), (0, 7), (0, 6), (0, 3), (0, 2), (0, 1), (0, 0)]]
+    board._Board__reset_stones(from_right=True)
+    assert board.players[0].stones == [(7, 5), (7, 6), (7, 7), (7, 2), (7, 3), (7, 4), (7, 0), (7, 1)]
+    assert board.players[1].stones == [(0, 5), (0, 4), (0, 7), (0, 6), (0, 3), (0, 2), (0, 1), (0, 0)]
 
 

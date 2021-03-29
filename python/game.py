@@ -8,6 +8,16 @@ class GameException(Exception):
 BLEN = 8
 
 
+class Player:
+    def __init__(self, name, stones):
+        self.name = name
+        self.stones = stones
+        self.sumo_levels = [0] * BLEN
+
+    def get_points(self):
+        return sum(Board.SUMO_STATS[lvl]['points'] for lvl in self.sumo_levels)
+
+
 class Board:
     BOARD_COLORS = [
         [7, 6, 5, 4, 3, 2, 1, 0],
@@ -20,74 +30,79 @@ class Board:
         [0, 1, 2, 3, 4, 5, 6, 7]
     ]
 
-    SUMO_ABILITIES = ((BLEN, 0), (5, 1), (3, 2), (1, 3))  # (max_range , power)
+    SUMO_STATS = [{
+        'range': BLEN,
+        'power': 0,
+        'points': 0
+    }, {
+        'range': 5,
+        'power': 1,
+        'points': 1
+    }, {
+        'range': 3,
+        'power': 2,
+        'points': 3
+    }, {
+        'range': 1,
+        'power': 3,
+        'points': 7
+    }, {
+        'range': 0,
+        'power': 0,
+        'points': 15
+    }]
+
+    @staticmethod
+    def get_start_board():
+        return [[True] * BLEN] + [[False] * BLEN for i in range(BLEN - 2)] + [[True] * BLEN]
 
     @staticmethod
     def get_board_color(pos):
         return Board.BOARD_COLORS[pos[0]][pos[1]]
 
     @staticmethod
-    def get_player_name(player):
-        return ('White', 'Black')[player]
-
-    @staticmethod
     def is_in_bounds(pos):
         return all(0 <= coord < BLEN for coord in pos)
 
-    def __init__(self):
+    def __init__(self, winning_points=1):
+        self.winning_points = winning_points
         self.turn_count = 0
-        self.current_player = 0
+        self.round_over = False
         self.winner = None
-        self.winner_history = []
         self.current_color = None
-        self.sumo_stages = ([0] * BLEN, [0] * BLEN)
-        self.stones = [[(BLEN - 1, i) for i in range(BLEN)],
-                       [(0, i) for i in reversed(range(BLEN))]]
-        self.board = [[False] * BLEN for i in range(BLEN - 2)]
-        self.board.insert(0, [True] * BLEN)
-        self.board.append([True] * BLEN)
+        self.board = Board.get_start_board()
+        fst_player = Player('White', [(BLEN - 1, i) for i in range(BLEN)])
+        snd_player = Player('Black', [(0, i) for i in reversed(range(BLEN))])
+        self.players = (fst_player, snd_player)
+        self.current_player = 0
 
-    def direction(self):
+    def __direction(self):
         return (-1, 1)[self.current_player]
 
-    def is_occupied(self, pos):
+    def __is_occupied(self, pos):
         return self.board[pos[0]][pos[1]]
 
-    def occupy(self, pos):
+    def __occupy(self, pos):
         self.board[pos[0]][pos[1]] = True
 
-    def unoccupy(self, pos):
+    def __unoccupy(self, pos):
         self.board[pos[0]][pos[1]] = False
 
-    def get_stone_color(self, pos):
-        if not self.is_occupied(pos):
+    def __get_stone_color(self, pos):
+        if not self.__is_occupied(pos):
             raise GameException('Position is not occupied')
+        try:
+            return self.players[0].stones.index(pos)
+        except ValueError:
+            return self.players[1].stones.index(pos)
 
-        for player in (0, 1):
-            if pos in self.stones[player]:
-                return self.stones[player].index(pos)
-
-    def reset_stones(self, from_right=False):
-        def flip_stones(flip_row=False, flip_col=False):
-            return [(pos[0] * (1, -1)[flip_row],
-                     pos[1] * (1, -1)[flip_col]) for pos in self.stones[player]]
-        for player in (0, 1):
-            stones = flip_stones(flip_row=not bool(player), flip_col=from_right)
-            sorted_colors = sorted(range(BLEN), key=stones.__getitem__)
-            if from_right:
-                sorted_colors.reverse()
-            start_row = (BLEN - 1, 0)[player]
-            for place, color in enumerate(sorted_colors):
-                self.stones[player][color] = start_row, place
-            from_right = not from_right
-
-    def check_move(self, start_pos, target_pos):
-        assert self.is_occupied(start_pos), 'inconsistent state'
-        if self.is_occupied(target_pos):
+    def __check_path_clear(self, start_pos, target_pos):
+        assert self.__is_occupied(start_pos), 'inconsistent state'
+        if self.__is_occupied(target_pos):
             raise GameException('No moving onto stone')
-        if self.direction() * (target_pos[0] - start_pos[0]) <= 0:
+        if self.__direction() * (target_pos[0] - start_pos[0]) <= 0:
             raise GameException('Incorrect forward movement')
-        row_path = range(start_pos[0] + self.direction(), target_pos[0], self.direction())
+        row_path = range(start_pos[0] + self.__direction(), target_pos[0], self.__direction())
         # if line straight
         if start_pos[1] == target_pos[1]:
             col_path = [start_pos[1]] * len(row_path)
@@ -98,10 +113,26 @@ class Board:
             col_path = range(start_pos[1] + diag_direction, target_pos[1], diag_direction)
         if any(self.board[row][col] for row, col in zip(row_path, col_path)):
             raise GameException('Piece in-between')
-        move_length = abs(start_pos[0] - target_pos[0])
 
-        if move_length > self.SUMO_ABILITIES[self.sumo_stages[self.current_player][self.get_stone_color(start_pos)]][0]:
-            raise GameException('Move exceeds max range')
+    def __process_round_winner(self, winner):
+        self.round_over = True
+        self.players[winner].sumo_levels[self.current_color] += 1
+        if self.players[winner].get_points() >= self.winning_points:
+            self.winner = winner
+
+    def __reset_stones(self, from_right):
+        def flip_stones(flip_row=False, flip_col=False):
+            return [(pos[0] * (1, -1)[flip_row],
+                     pos[1] * (1, -1)[flip_col]) for pos in self.players[player].stones]
+        for player in (0, 1):
+            stones = flip_stones(flip_row=not bool(player), flip_col=from_right)
+            sorted_colors = sorted(range(BLEN), key=stones.__getitem__)
+            if from_right:
+                sorted_colors.reverse()
+            start_row = (BLEN - 1, 0)[player]
+            for place, color in enumerate(sorted_colors):
+                self.players[player].stones[color] = start_row, place
+            from_right = not from_right
 
     def set_color(self, color):
         if self.turn_count > 0:
@@ -111,62 +142,61 @@ class Board:
     def move_stone(self, target_pos):
         if self.current_color is None:
             raise GameException('Must set a color first')
-        stone_pos = self.stones[self.current_player][self.current_color]
-        self.check_move(stone_pos, target_pos)
-        self.unoccupy(stone_pos)
-        self.occupy(target_pos)
-        self.stones[self.current_player][self.current_color] = target_pos
-        self.current_color = Board.get_board_color(target_pos)
-        self.turn_count += 1
+        stone_pos = self.players[self.current_player].stones[self.current_color]
+        self.__check_path_clear(stone_pos, target_pos)
+        move_length = abs(target_pos[0] - stone_pos[0])
+        sumo_level = self.players[self.current_player].sumo_levels[self.current_color]
+        if move_length > Board.SUMO_STATS[sumo_level]['range']:
+            raise GameException('Move exceeds max range')
+        self.__unoccupy(stone_pos)
+        self.__occupy(target_pos)
+        self.players[self.current_player].stones[self.current_color] = target_pos
+        self.turn_count += 1  # player 0 made this move
         if target_pos[0] == (BLEN - 1) * self.current_player:
-            self.winner = self.current_player
-            self.reset_board(self.get_stone_color(target_pos))
+            self.__process_round_winner(self.current_player)
         else:
-            self.current_player = 1 - self.current_player
+            self.current_color = Board.get_board_color(target_pos)
+            self.current_player = 1 - self.current_player  # now current player is 1
             if not self.get_legal_moves():
                 # skip move
-                pos = self.stones[self.current_player][self.current_color]
+                pos = self.players[self.current_player].stones[self.current_color]
                 self.current_color = Board.get_board_color(pos)
-                self.current_player = 1 - self.current_player
+                self.current_player = 1 - self.current_player  # now current player is 0
+                if not self.get_legal_moves():  # deadlock, causing player 0 loses, player 1 wins
+                    self.__process_round_winner(1 - self.current_player)
 
     def get_legal_moves(self):
         # if game over or color has not been set
         if self.winner is not None or self.current_color is None:
             return []
-        stone_pos = self.stones[self.current_player][self.current_color]
+        stone_pos = self.players[self.current_player].stones[self.current_color]
         legal_moves = []
         current_pos = stone_pos
+        sumo_level = self.players[self.current_player].sumo_levels[self.current_color]
+        max_range = Board.SUMO_STATS[sumo_level]['range']
         for diag_direction in (-1, 0, 1):
-            while True:
-                current_pos = (current_pos[0] + self.direction(),
+            move_length = 0
+            while move_length < max_range:
+                current_pos = (current_pos[0] + self.__direction(),
                                current_pos[1] + diag_direction)
-                if self.is_in_bounds(current_pos) and not self.is_occupied(current_pos):
-                    # Is this pythonic? Help.
-                    try:
-                        self.check_move(stone_pos, current_pos)
-                        legal_moves.append(current_pos)
-                    except:
-                        pass
+                if self.is_in_bounds(current_pos) and not self.__is_occupied(current_pos):
+                    legal_moves.append(current_pos)
                 else:
                     current_pos = stone_pos
                     break
+                move_length += 1
         return legal_moves
 
-    def reset_board(self, winning_stone_color):
-        # TODO User Input
-        self.reset_stones(from_right=True)
-        self.winner_history.append(self.winner)
-        self.sumo_stages[self.winner][winning_stone_color] += 1
+    def reset(self, from_right):
+        if not self.round_over:
+            raise GameException('Round must be over to reset board')
+        self.__reset_stones(from_right)
         self.current_player = 0
         self.turn_count = 0
         self.winner = None
         self.current_color = None
-        self.board = [[False] * BLEN for i in range(BLEN - 2)]
-        self.board.insert(0, [True] * BLEN)
-        self.board.append([True] * BLEN)
-
-
-
+        self.board = Board.get_start_board()
+        self.round_over = False
 
     def draw(self):
         return draw.draw_board(self)
