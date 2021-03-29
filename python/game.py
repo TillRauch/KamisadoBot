@@ -38,6 +38,7 @@ class Board:
         self.turn_count = 0
         self.current_player = 0
         self.winner = None
+        self.winner_history = []
         self.current_color = None
         self.sumo_stages = ([0] * BLEN, [0] * BLEN)
         self.stones = [[(BLEN - 1, i) for i in range(BLEN)],
@@ -122,6 +123,7 @@ class Board:
         self.turn_count += 1
         if target_pos[0] == (BLEN - 1) * self.current_player:
             self.winner = self.current_player
+            self.reset_board(self.get_stone_color(target_pos))
         else:
             self.current_player = 1 - self.current_player
             if not self.get_legal_moves():
@@ -147,6 +149,22 @@ class Board:
                     current_pos = stone_pos
                     break
         return legal_moves
+
+    def reset_board(self, winning_stone_color):
+        # TODO User Input
+        self.reset_stones(from_right=True)
+        self.winner_history.append(self.winner)
+        self.sumo_stages[self.winner][winning_stone_color] += 1
+        self.current_player = 0
+        self.turn_count = 0
+        self.winner = None
+        self.current_color = None
+        self.board = [[False] * BLEN for i in range(BLEN - 2)]
+        self.board.insert(0, [True] * BLEN)
+        self.board.append([True] * BLEN)
+
+
+
 
     def draw(self):
         return draw.draw_board(self)
