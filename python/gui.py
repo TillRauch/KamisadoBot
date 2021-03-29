@@ -24,7 +24,7 @@ def run():
             pos = event.pos[1] // CELL_PIXELS, event.pos[0] // CELL_PIXELS
             if board.current_color is None:
                 if pos[0] == 7:
-                    board.set_color(pos[1])
+                    board.set_color(board.get_stone_color(pos))
                     update()
             else:
                 try:

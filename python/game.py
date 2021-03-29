@@ -144,7 +144,12 @@ class Board:
                 current_pos = (current_pos[0] + self.direction(),
                                current_pos[1] + diag_direction)
                 if self.is_in_bounds(current_pos) and not self.is_occupied(current_pos):
-                    legal_moves.append(current_pos)
+                    # Is this pythonic? Help.
+                    try:
+                        self.check_move(stone_pos, current_pos)
+                        legal_moves.append(current_pos)
+                    except:
+                        pass
                 else:
                     current_pos = stone_pos
                     break
