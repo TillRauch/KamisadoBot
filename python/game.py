@@ -64,7 +64,7 @@ class Board:
     def is_in_bounds(pos):
         return all(0 <= coord < BLEN for coord in pos)
 
-    def __init__(self, winning_points=1):
+    def __init__(self, winning_points=3):
         self.winning_points = winning_points
         self.turn_count = 0
         self.round_over = False
@@ -182,9 +182,9 @@ class Board:
                 if self.is_in_bounds(current_pos) and not self.__is_occupied(current_pos):
                     legal_moves.append(current_pos)
                 else:
-                    current_pos = stone_pos
                     break
                 move_length += 1
+            current_pos = stone_pos
         return legal_moves
 
     def reset(self, from_right):
