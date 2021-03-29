@@ -4,18 +4,18 @@ from draw import BOARD_PIXELS, CELL_PIXELS
 
 
 def run():
-    def draw_board():
-        image = pygame.image.frombuffer(board.draw().tobytes(), (BOARD_PIXELS, ) * 2, 'RGB')
-        window.blit(image, (0, 0))
+    def update():
+        img = pygame.image.frombuffer(board.draw().tobytes(), (BOARD_PIXELS, ) * 2, 'RGB')
+        window.blit(img, (0, 0))
         pygame.display.update()
+    pygame.init()
+    pygame.display.set_caption('Kamisado')
+    window = pygame.display.set_mode((BOARD_PIXELS, ) * 2)
     board = game.Board()
     # board.set_color(3)
     # board.move_stone((3, 3))
     # board.move_stone((4, 0))
-    pygame.init()
-    window = pygame.display.set_mode((BOARD_PIXELS, ) * 2)
-    pygame.display.set_caption('Kamisado')
-    draw_board()
+    update()
     while board.winner is None:
         event = pygame.event.wait()
         if event.type == pygame.QUIT:
@@ -25,13 +25,13 @@ def run():
             if board.current_color is None:
                 if pos[0] == 7:
                     board.set_color(pos[1])
-                    draw_board()
+                    update()
             else:
                 try:
                     board.move_stone(pos)
                 except game.GameException:
                     continue
-                draw_board()
+                update()
     font = pygame.font.SysFont('Arial', 100, True)
     text = font.render(f'{board.get_player_name(board.winner)} has won', True, (200, ) * 3)
     window.blit(text, (BOARD_PIXELS / 2 - text.get_width() // 2,

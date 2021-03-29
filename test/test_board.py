@@ -89,30 +89,26 @@ def test_illegal_move_over_stone_diagonal():
     with pytest.raises(game.GameException, match='Piece in-between'):
         board.check_move((2, 3), (5, 6))
 
-def test_stone_order_black_left():
+
+def test_reset_stones_from_left():
     board = game.Board()
 
-    board.stones = ([], [(0, 7), (0, 6), (1, 7), (1, 6), (0, 5), (0, 4), (0, 3), (0, 2)])
+    board.stones = [[(7, 0), (7, 1), (7, 2), (6, 0), (6, 1), (6, 2), (0, 0), (1, 0)],
+                    [(0, 7), (0, 6), (1, 7), (1, 6), (0, 5), (0, 4), (0, 3), (0, 2)]]
 
-    assert board.stone_order(1, "l") == [(0, 7), (0, 6), (0, 1), (0, 0), (0, 5), (0, 4), (0, 3), (0, 2)]
+    board.reset_stones(False)
+    assert board.stones == [[(7, 0), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 7), (7, 6)],
+                            [(0, 7), (0, 6), (0, 1), (0, 0), (0, 5), (0, 4), (0, 3), (0, 2)]]
 
-def test_stone_order_black_right():
+
+def test_reset_stones_from_right():
     board = game.Board()
 
-    board.stones = ([], [(0, 7), (0, 6), (1, 7), (1, 6), (0, 5), (0, 4), (0, 3), (0, 2)])
+    board.stones = [[(7, 0), (7, 1), (7, 2), (6, 0), (6, 1), (6, 2), (0, 0), (1, 0)],
+                    [(0, 7), (0, 6), (1, 7), (1, 6), (0, 5), (0, 4), (0, 3), (0, 2)]]
 
-    assert board.stone_order(1, "r") == [(0, 5), (0, 4), (0, 7), (0, 6), (0, 3), (0, 2), (0, 1), (0, 0)]
+    board.reset_stones(True)
+    assert board.stones == [[(7, 5), (7, 6), (7, 7), (7, 2), (7, 3), (7, 4), (7, 0), (7, 1)],
+                            [(0, 5), (0, 4), (0, 7), (0, 6), (0, 3), (0, 2), (0, 1), (0, 0)]]
 
-def test_stone_order_white_left():
-    board = game.Board()
 
-    board.stones = ([(7, 0), (7, 1), (7, 2), (6, 0), (6, 1), (6, 2), (0, 0), (1, 0)], [])
-
-    assert board.stone_order(0, "l") == [(7, 0), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 7), (7, 6)]
-
-def test_stone_order_white_right():
-    board = game.Board()
-
-    board.stones = ([(7, 0), (7, 1), (7, 2), (6, 0), (6, 1), (6, 2), (0, 0), (1, 0)], [])
-
-    assert board.stone_order(0, "r") == [(7, 5), (7, 6), (7, 7), (7, 2), (7, 3), (7, 4), (7, 0), (7, 1)]

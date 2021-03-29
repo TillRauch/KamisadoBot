@@ -28,18 +28,14 @@ COLORS = [
 
 
 def draw_board(board):
-    def tuple_add(tup, constant):
-        return tuple(v + constant for v in tup)
-
     def bounding_box(offset, bounding):
         coords = (pos[1] * CELL_PIXELS, pos[0] * CELL_PIXELS)
-        return [tuple_add(coords, offset + bounding),
-                tuple_add(coords, offset - bounding + CELL_PIXELS)]
-
+        return [tuple(v + offset + bounding for v in coords),
+                tuple(v + offset - bounding + CELL_PIXELS for v in coords)]
     img = Image.new('RGB', (BOARD_PIXELS, ) * 2)
     draw = ImageDraw.Draw(img)
     for pos in product(range(8), repeat=2):
-        draw.rectangle(bounding_box(0, 0), fill=COLORS[board.get_color(pos)], width=0)
+        draw.rectangle(bounding_box(0, 0), fill=COLORS[board.get_color(pos)])
     for player, player_stones in enumerate(board.stones):
         for color, pos in enumerate(player_stones):
             draw.ellipse(bounding_box(0, PIECE_BOUNDING), fill=SHADOW_COLORS[player])
@@ -50,7 +46,7 @@ def draw_board(board):
             'White': (255, 255, 255),
             'Black': (0, 0, 0)
         }[board.get_player_name(board.current_player)]
-        draw.ellipse(bounding_box(0, PIECE_BOUNDING), fill=None, outline=player_rgb, width=5)
+        draw.ellipse(bounding_box(0, PIECE_BOUNDING), outline=player_rgb, width=5)
     del draw
     return img
 
