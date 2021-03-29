@@ -13,8 +13,6 @@ def run():
     window = pygame.display.set_mode((BOARD_PIXELS, ) * 2)
     board = game.Board()
     # board.set_color(3)
-    # board.move_stone((3, 3))
-    # board.move_stone((4, 0))
     update()
     while board.winner is None:
         event = pygame.event.wait()

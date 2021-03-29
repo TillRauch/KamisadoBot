@@ -1,4 +1,5 @@
 from itertools import product
+import math
 from PIL import Image, ImageDraw
 import game
 
@@ -12,6 +13,10 @@ BOARD_PIXELS = CELL_PIXELS * 8
 COLOR_BOUNDING = int(CELL_PIXELS / 2 * (1 - COLOR_RATIO))
 PIECE_BOUNDING = int(CELL_PIXELS / 2 * (1 - PIECE_RATIO))
 SHADOW_PIXELS = int(SHADOW_RATIO * CELL_PIXELS)
+
+SUMO_SPIKE_SIZE = 7
+SUMO_SPIKE_GROUP_COUNT = 4
+SUMO_SPIKE_OFFSET = 18 # in degrees
 
 PLAYER_COLORS = [(255, 255, 255), (0, 0, 0)]
 SHADOW_COLORS = [(80, 80, 80), (120, 120, 120)]
@@ -32,6 +37,15 @@ def draw_board(board):
         coords = (pos[1] * CELL_PIXELS, pos[0] * CELL_PIXELS)
         return [tuple(v + offset + bounding for v in coords),
                 tuple(v + offset - bounding + CELL_PIXELS for v in coords)]
+
+    def bounding_circle(rotation, stone_radius, radius):
+        coords = (pos[1] * CELL_PIXELS, pos[0] * CELL_PIXELS)
+        center_coords = [v + CELL_PIXELS / 2 - SHADOW_PIXELS for v in coords]
+        center_coords[0] -= math.sin(rotation) * stone_radius
+        center_coords[1] -= math.cos(rotation) * stone_radius
+
+
+        return center_coords + [radius]
     img = Image.new('RGB', (BOARD_PIXELS, ) * 2)
     draw = ImageDraw.Draw(img)
     for pos in product(range(8), repeat=2):
@@ -41,6 +55,19 @@ def draw_board(board):
             draw.ellipse(bounding_box(0, PIECE_BOUNDING), fill=SHADOW_COLORS[player])
             draw.ellipse(bounding_box(-SHADOW_PIXELS, PIECE_BOUNDING), fill=PLAYER_COLORS[player])
             draw.ellipse(bounding_box(-SHADOW_PIXELS, COLOR_BOUNDING), fill=COLORS[color])
+            sumo_count = board.sumo_stages[player][color]
+            for offset in range(sumo_count):
+                for group in range(SUMO_SPIKE_GROUP_COUNT):
+                    radians_rotation = offset * math.radians(SUMO_SPIKE_OFFSET) + group * math.pi / 2 - (sumo_count-1) * (math.radians(SUMO_SPIKE_OFFSET) / 2)
+                    draw.regular_polygon(bounding_circle(radians_rotation, 30, SUMO_SPIKE_SIZE), 3, rotation=math.degrees(radians_rotation), fill=PLAYER_COLORS[1-player])
+
+
+
+
+
+
+
+
     for pos in board.get_legal_moves():
         player_rgb = {
             'White': (255, 255, 255),
@@ -58,4 +85,5 @@ if __name__ == '__main__':
     my_board.move_stone((4, 5))
     my_board.move_stone((5, 6))
     my_board.move_stone((4, 3))
+    my_board.sumo_stages = ((0, 0, 0, 0, 2, 0, 1, 0), [0] * 7 + [3])
     my_board.draw().show()

@@ -100,9 +100,6 @@ class Board:
             raise GameException('Piece in-between')
         move_length = abs(start_pos[0] - target_pos[0])
 
-        print(move_length)
-        print(self.SUMO_ABILITIES[self.sumo_stages[self.current_player][self.get_stone_color(start_pos)]][0])
-
         if move_length > self.SUMO_ABILITIES[self.sumo_stages[self.current_player][self.get_stone_color(start_pos)]][0]:
             raise GameException('Move exceeds max range')
 
