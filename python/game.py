@@ -89,14 +89,6 @@ class Board:
     def __unoccupy(self, pos):
         self.occupied[pos[0]][pos[1]] = False
 
-    def __get_stone_color(self, pos):
-        if not self.__is_occupied(pos):
-            raise GameException('Position is not occupied')
-        try:
-            return self.fst_player.stones.index(pos)
-        except ValueError:
-            return self.snd_player.stones.index(pos)
-
     def __check_path_clear(self, start_pos, target_pos):
         assert self.__is_occupied(start_pos), 'inconsistent state'
         if self.__is_occupied(target_pos):
@@ -123,7 +115,7 @@ class Board:
 
     def __sumo_cascade(self, sumo_pos, end_pos):
         def move_sumo(player, pos):
-            self.__move_stone(player, self.__get_stone_color(pos), self.__next_pos(pos))
+            self.__move_stone(player, player.stones.index(pos), self.__next_pos(pos))
         assert not self.__is_occupied(end_pos)
         row_range = range(self.__next_pos(sumo_pos)[0], end_pos[0], self.__direction())
         positions = [(row, sumo_pos[1]) for row in row_range]

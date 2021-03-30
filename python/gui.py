@@ -49,8 +49,7 @@ def run():
     def handle_round():
         if board.current_color is None:
             if pos[0] == 7:
-                stone_order = [col for row, col in board.current_player.stones]
-                board.set_color(stone_order.index(pos[1]))
+                board.set_color(board.current_player.stones.index(pos))
                 update_image()
         else:
             try:
