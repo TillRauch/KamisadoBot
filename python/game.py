@@ -12,10 +12,22 @@ class Player:
     def __init__(self, name, stones):
         self.name = name
         self.stones = stones
+        self.start_row = stones[0][0]
         self.sumo_levels = [0] * BLEN
 
     def get_points(self):
         return sum(Board.SUMO_STATS[lvl]['points'] for lvl in self.sumo_levels)
+
+    def reset_stones(self, flip_col_order):
+        def flip_stones(flip_row=False, flip_col=False):
+            return [(pos[0] * (1, -1)[flip_row],
+                     pos[1] * (1, -1)[flip_col]) for pos in self.stones]
+        stones = flip_stones(flip_row=self.start_row > 0, flip_col=flip_col_order)
+        sorted_colors = sorted(range(BLEN), key=stones.__getitem__)
+        if flip_col_order:
+            sorted_colors.reverse()
+        for place, color in enumerate(sorted_colors):
+            self.stones[color] = self.start_row, place
 
 
 class Board:
@@ -120,26 +132,15 @@ class Board:
         if self.players[winner].get_points() >= self.winning_points:
             self.winner = winner
 
-    def __reset_stones(self, from_right):
-        def flip_stones(flip_row=False, flip_col=False):
-            return [(pos[0] * (1, -1)[flip_row],
-                     pos[1] * (1, -1)[flip_col]) for pos in self.players[player].stones]
-        for player in (0, 1):
-            stones = flip_stones(flip_row=not bool(player), flip_col=from_right)
-            sorted_colors = sorted(range(BLEN), key=stones.__getitem__)
-            if from_right:
-                sorted_colors.reverse()
-            start_row = (BLEN - 1, 0)[player]
-            for place, color in enumerate(sorted_colors):
-                self.players[player].stones[color] = start_row, place
-            from_right = not from_right
-
     def set_color(self, color):
         if self.turn_count > 0:
             raise GameException('Can only set color on first turn')
         self.current_color = color
 
     def move_stone(self, target_pos):
+        def set_current_color_and_player():
+            self.current_color = Board.get_board_color(target_pos)
+            self.current_player = 1 - self.current_player  # now current player is 1
         if self.current_color is None:
             raise GameException('Must set a color first')
         stone_pos = self.players[self.current_player].stones[self.current_color]
@@ -155,13 +156,11 @@ class Board:
         if target_pos[0] == (BLEN - 1) * self.current_player:
             self.__process_round_winner(self.current_player)
         else:
-            self.current_color = Board.get_board_color(target_pos)
-            self.current_player = 1 - self.current_player  # now current player is 1
+            set_current_color_and_player()  # now current player is 1
             if not self.get_legal_moves():
                 # skip move
-                pos = self.players[self.current_player].stones[self.current_color]
-                self.current_color = Board.get_board_color(pos)
-                self.current_player = 1 - self.current_player  # now current player is 0
+                target_pos = self.players[self.current_player].stones[self.current_color]
+                set_current_color_and_player()  # now current player is 0
                 if not self.get_legal_moves():  # deadlock, causing player 0 loses, player 1 wins
                     self.__process_round_winner(1 - self.current_player)
 
@@ -169,20 +168,19 @@ class Board:
         # if game over or color has not been set
         if self.winner is not None or self.current_color is None:
             return []
-        stone_pos = self.players[self.current_player].stones[self.current_color]
-        legal_moves = []
-        current_pos = stone_pos
         sumo_level = self.players[self.current_player].sumo_levels[self.current_color]
         max_range = Board.SUMO_STATS[sumo_level]['range']
+        stone_pos = self.players[self.current_player].stones[self.current_color]
+        current_pos = stone_pos
+        legal_moves = []
         for diag_direction in (-1, 0, 1):
             move_length = 0
             while move_length < max_range:
                 current_pos = (current_pos[0] + self.__direction(),
                                current_pos[1] + diag_direction)
-                if self.is_in_bounds(current_pos) and not self.__is_occupied(current_pos):
-                    legal_moves.append(current_pos)
-                else:
+                if not self.is_in_bounds(current_pos) or self.__is_occupied(current_pos):
                     break
+                legal_moves.append(current_pos)
                 move_length += 1
             current_pos = stone_pos
         return legal_moves
@@ -190,7 +188,8 @@ class Board:
     def reset(self, from_right):
         if not self.round_over:
             raise GameException('Round must be over to reset board')
-        self.__reset_stones(from_right)
+        self.players[0].reset_stones(flip_col_order=from_right)
+        self.players[1].reset_stones(flip_col_order=not from_right)
         self.current_player = 0
         self.turn_count = 0
         self.winner = None

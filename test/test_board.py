@@ -129,7 +129,8 @@ def test_reset_stones_from_left():
     board.players[0].stones = [(7, 0), (7, 1), (7, 2), (6, 0), (6, 1), (6, 2), (0, 0), (1, 0)]
     board.players[1].stones = [(0, 7), (0, 6), (1, 7), (1, 6), (0, 5), (0, 4), (0, 3), (0, 2)]
 
-    board._Board__reset_stones(from_right=False)
+    board.round_over = True
+    board.reset(from_right=False)
     assert board.players[0].stones == [(7, 0), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 7), (7, 6)]
     assert board.players[1].stones == [(0, 7), (0, 6), (0, 1), (0, 0), (0, 5), (0, 4), (0, 3), (0, 2)]
 
@@ -140,7 +141,8 @@ def test_reset_stones_from_right():
     board.players[0].stones = [(7, 0), (7, 1), (7, 2), (6, 0), (6, 1), (6, 2), (0, 0), (1, 0)]
     board.players[1].stones = [(0, 7), (0, 6), (1, 7), (1, 6), (0, 5), (0, 4), (0, 3), (0, 2)]
 
-    board._Board__reset_stones(from_right=True)
+    board.round_over = True
+    board.reset(from_right=True)
     assert board.players[0].stones == [(7, 5), (7, 6), (7, 7), (7, 2), (7, 3), (7, 4), (7, 0), (7, 1)]
     assert board.players[1].stones == [(0, 5), (0, 4), (0, 7), (0, 6), (0, 3), (0, 2), (0, 1), (0, 0)]
 
