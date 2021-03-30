@@ -1,3 +1,5 @@
+from itertools import product
+
 import pytest
 import game
 
@@ -11,10 +13,11 @@ presetBoard.perform_move((5, 6))
 presetBoard.perform_move((4, 3))
 
 
-def helper_recalculate_board(board):
-    for x in range(game.BLEN):
-        for y in range(game.BLEN):
-            board.board[x][y] = (x, y) in board.players[0].stones or (x, y) in board.players[1].stones
+def __make_occupy_consistent(board):
+    for row, col in product(range(game.BLEN), repeat=2):
+        occupied = any((row, col) in player.stones for player in (board.fst_player, board.snd_player))
+        board.occupied[row][col] = occupied
+
 
 def test_get_legal_moves():
     board = game.Board()
@@ -99,7 +102,7 @@ def test_illegal_move_too_long_white():
     board = game.Board()
     board.set_color(0)
 
-    board.players[0].sumo_levels[0] = 1
+    board.fst_player.sumo_levels[0] = 1
 
     with pytest.raises(game.GameException, match='Move exceeds max range'):
         board.perform_move((1, 0))
@@ -109,7 +112,7 @@ def test_sumo_move_just_in_range():
     board = game.Board()
     board.set_color(0)
 
-    board.players[0].sumo_levels[0] = 1
+    board.fst_player.sumo_levels[0] = 1
 
     try:
         board.perform_move((2, 0))
@@ -122,76 +125,77 @@ def test_illegal_move_too_long_black():
     board.set_color(0)
     board.perform_move((6, 1))
 
-    board.players[1].sumo_levels[0] = 1
+    board.snd_player.sumo_levels[0] = 1
 
     with pytest.raises(game.GameException, match='Move exceeds max range'):
         board.perform_move((6, 7))
 
+
 def test_reset_stones_from_left():
     board = game.Board()
 
-    board.players[0].stones = [(7, 0), (7, 1), (7, 2), (6, 0), (6, 1), (6, 2), (0, 0), (1, 0)]
-    board.players[1].stones = [(0, 7), (0, 6), (1, 7), (1, 6), (0, 5), (0, 4), (0, 3), (0, 2)]
+    board.fst_player.stones = [(7, 0), (7, 1), (7, 2), (6, 0), (6, 1), (6, 2), (0, 0), (1, 0)]
+    board.snd_player.stones = [(0, 7), (0, 6), (1, 7), (1, 6), (0, 5), (0, 4), (0, 3), (0, 2)]
 
     board.round_over = True
     board.reset(from_right=False)
-    assert board.players[0].stones == [(7, 0), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 7), (7, 6)]
-    assert board.players[1].stones == [(0, 7), (0, 6), (0, 1), (0, 0), (0, 5), (0, 4), (0, 3), (0, 2)]
+    assert board.fst_player.stones == [(7, 0), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 7), (7, 6)]
+    assert board.snd_player.stones == [(0, 7), (0, 6), (0, 1), (0, 0), (0, 5), (0, 4), (0, 3), (0, 2)]
 
 
 def test_reset_stones_from_right():
     board = game.Board()
 
-    board.players[0].stones = [(7, 0), (7, 1), (7, 2), (6, 0), (6, 1), (6, 2), (0, 0), (1, 0)]
-    board.players[1].stones = [(0, 7), (0, 6), (1, 7), (1, 6), (0, 5), (0, 4), (0, 3), (0, 2)]
+    board.fst_player.stones = [(7, 0), (7, 1), (7, 2), (6, 0), (6, 1), (6, 2), (0, 0), (1, 0)]
+    board.snd_player.stones = [(0, 7), (0, 6), (1, 7), (1, 6), (0, 5), (0, 4), (0, 3), (0, 2)]
 
     board.round_over = True
     board.reset(from_right=True)
-    assert board.players[0].stones == [(7, 5), (7, 6), (7, 7), (7, 2), (7, 3), (7, 4), (7, 0), (7, 1)]
-    assert board.players[1].stones == [(0, 5), (0, 4), (0, 7), (0, 6), (0, 3), (0, 2), (0, 1), (0, 0)]
+    assert board.fst_player.stones == [(7, 5), (7, 6), (7, 7), (7, 2), (7, 3), (7, 4), (7, 0), (7, 1)]
+    assert board.snd_player.stones == [(0, 5), (0, 4), (0, 7), (0, 6), (0, 3), (0, 2), (0, 1), (0, 0)]
+
 
 def test_illegal_sumo_own_stone():
     board = game.Board()
-    board.players[0].stones = [(4, 4), (3, 4), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7)]
-    board.players[1].stones = [(0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
+    board.fst_player.stones = [(4, 4), (3, 4), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7)]
+    board.snd_player.stones = [(0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
 
-    board.players[0].sumo_levels = [1, 0, 0, 0, 0, 0, 0, 0]
+    board.fst_player.sumo_levels = [1, 0, 0, 0, 0, 0, 0, 0]
     board.set_color(0)
-    helper_recalculate_board(board)
+    __make_occupy_consistent(board)
 
     with pytest.raises(game.GameException, match='Sumo cannot push own stone'):
         board.perform_move((3, 4))
 
 
-
 def test_single_sumo():
     board = game.Board()
-    board.players[0].stones = [(4, 4), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7)]
-    board.players[1].stones = [(3, 4), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
+    board.fst_player.stones = [(4, 4), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7)]
+    board.snd_player.stones = [(3, 4), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
 
-    board.players[0].sumo_levels = [1, 0, 0, 0, 0, 0, 0, 0]
+    board.fst_player.sumo_levels = [1, 0, 0, 0, 0, 0, 0, 0]
     board.set_color(0)
 
-    helper_recalculate_board(board)
+    __make_occupy_consistent(board)
     board.perform_move((3, 4))
 
-    assert board.players[0].stones == [(3, 4), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7)]
-    assert board.players[1].stones == [(2, 4), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
-    assert board.current_player == 1
+    assert board.fst_player.stones == [(3, 4), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7)]
+    assert board.snd_player.stones == [(2, 4), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
+    assert board.current_player == board.snd_player
     assert board.current_color == 5  # Lila
+
 
 def test_double_sumo():
     board = game.Board()
-    board.players[0].stones = [(4, 4), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7)]
-    board.players[1].stones = [(3, 4), (2, 4), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
+    board.fst_player.stones = [(4, 4), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7)]
+    board.snd_player.stones = [(3, 4), (2, 4), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
 
-    board.players[0].sumo_levels = [2, 0, 0, 0, 0, 0, 0, 0]
+    board.fst_player.sumo_levels = [2, 0, 0, 0, 0, 0, 0, 0]
     board.set_color(0)
-
-    helper_recalculate_board(board)
+    __make_occupy_consistent(board)
     board.perform_move((3, 4))
 
-    assert board.players[0].stones == [(3, 4), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7)]
-    assert board.players[1].stones == [(2, 4), (1, 4), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
-    assert board.current_player == 1
-    assert board.current_color == 6  # Lila
+    assert board.fst_player.stones == [(3, 4), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7)]
+    assert board.snd_player.stones == [(2, 4), (1, 4), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
+    assert board.current_player == board.snd_player
+    assert board.current_color == 6  # Blau
