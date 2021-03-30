@@ -76,9 +76,9 @@ def draw_board(board):
 if __name__ == '__main__':
     my_board = game.Board()
     my_board.set_color(0)
-    my_board.move_stone((5, 0))
-    my_board.move_stone((4, 5))
-    my_board.move_stone((5, 6))
-    my_board.move_stone((4, 3))
+    my_board.perform_move((5, 0))
+    my_board.perform_move((4, 5))
+    my_board.perform_move((5, 6))
+    my_board.perform_move((4, 3))
     my_board.sumo_stages = ((0, 0, 0, 0, 2, 0, 1, 0), [0] * 7 + [3])
     my_board.draw().show()

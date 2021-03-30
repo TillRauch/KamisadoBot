@@ -132,26 +132,68 @@ class Board:
         if self.players[winner].get_points() >= self.winning_points:
             self.winner = winner
 
+    def __sumo_cascade(self, start_pos, length):
+        current_pos = (start_pos[0] + self.__direction() * length, start_pos[1])
+        assert not self.__is_occupied(current_pos)
+        self.__occupy(current_pos)
+        while current_pos != start_pos:
+            next_pos = (current_pos[0] - self.__direction(), current_pos[1])
+            self.__move_stone(next_pos, current_pos)
+            current_pos = next_pos
+        self.__unoccupy(start_pos)
+
+
+    def __move_stone(self, stone_pos, target_pos): # hard move onto new position, no fucks given
+        stone_owner = bool(stone_pos in self.players[1].stones)
+        stone_color = self.__get_stone_color(stone_pos)
+        self.__unoccupy(stone_pos)
+        self.__occupy(target_pos)
+        self.players[stone_owner].stones[stone_color] = target_pos
+
     def set_color(self, color):
         if self.turn_count > 0:
             raise GameException('Can only set color on first turn')
         self.current_color = color
 
-    def move_stone(self, target_pos):
+
+    def perform_move(self, target_pos):
         def set_current_color_and_player():
             self.current_color = Board.get_board_color(target_pos)
             self.current_player = 1 - self.current_player  # now current player is 1
         if self.current_color is None:
             raise GameException('Must set a color first')
         stone_pos = self.players[self.current_player].stones[self.current_color]
-        self.__check_path_clear(stone_pos, target_pos)
         move_length = abs(target_pos[0] - stone_pos[0])
         sumo_level = self.players[self.current_player].sumo_levels[self.current_color]
-        if move_length > Board.SUMO_STATS[sumo_level]['range']:
-            raise GameException('Move exceeds max range')
-        self.__unoccupy(stone_pos)
-        self.__occupy(target_pos)
-        self.players[self.current_player].stones[self.current_color] = target_pos
+        sumo_strength = Board.SUMO_STATS[sumo_level]['power']
+
+        if sumo_level > 0 and move_length == 1 and stone_pos[1] == target_pos[1]:  # sumo style move
+            forward_step = 1
+            while forward_step <= sumo_strength + 1:
+                push_pos = (stone_pos[0] + self.__direction() * forward_step, stone_pos[1])
+                if not self.is_in_bounds(push_pos):
+                    raise GameException('Sumo cannot push off the board')
+                if not self.__is_occupied(push_pos):
+                    break
+                if forward_step == sumo_strength + 1:
+                    raise GameException('Sumo needs to push onto empty cell')
+                if push_pos in self.players[self.current_player].stones:
+                    raise GameException('Sumo cannot push own stone')
+                forward_step += 1
+            print(stone_pos, forward_step)
+            self.__sumo_cascade(stone_pos, forward_step)
+            target_pos = (stone_pos[0] + self.__direction() * forward_step, stone_pos[1])
+            # TODO: Fix this shit
+            set_current_color_and_player()
+            return
+
+        else:
+            self.__check_path_clear(stone_pos, target_pos)
+            if move_length > Board.SUMO_STATS[sumo_level]['range']:
+                raise GameException('Move exceeds max range')
+            self.__move_stone(stone_pos, target_pos)
+
+
         self.turn_count += 1  # player 0 made this move
         if target_pos[0] == (BLEN - 1) * self.current_player:
             self.__process_round_winner(self.current_player)

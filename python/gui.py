@@ -1,6 +1,7 @@
 import pygame
 import game
 from draw import BOARD_PIXELS, CELL_PIXELS
+import test
 
 DIALOGUE_DIM = (400, 200)
 TEXT_PADDING = 40
@@ -34,6 +35,20 @@ def run():
     window = pygame.display.set_mode((BOARD_PIXELS, ) * 2)
     rect_pos = (BOARD_PIXELS // 2 - DIALOGUE_DIM[0] / 2, BOARD_PIXELS // 1.3 - DIALOGUE_DIM[1] / 2)
     board = game.Board()
+    #---- board setup
+    def helper_recalculate_board(board):
+        for x in range(game.BLEN):
+            for y in range(game.BLEN):
+                board.board[x][y] = (x, y) in board.players[0].stones or (x, y) in board.players[1].stones
+    board.players[0].stones = [(3, 4), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7)]
+    board.players[1].stones = [(2, 4), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
+
+    board.players[0].sumo_levels = [1, 0, 0, 0, 0, 0, 0, 0]
+    board.set_color(0)
+
+    helper_recalculate_board(board)
+
+    #----
     update()
     while True:
         event = pygame.event.wait()
@@ -50,7 +65,7 @@ def run():
                         update()
                 else:
                     try:
-                        board.move_stone(pos)
+                        board.perform_move(pos)
                     except game.GameException:
                         continue
                     update()
