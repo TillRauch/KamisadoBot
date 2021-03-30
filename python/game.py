@@ -170,19 +170,15 @@ class Board:
             return []
         sumo_level = self.players[self.current_player].sumo_levels[self.current_color]
         max_range = Board.SUMO_STATS[sumo_level]['range']
-        stone_pos = self.players[self.current_player].stones[self.current_color]
-        current_pos = stone_pos
+        start_pos = self.players[self.current_player].stones[self.current_color]
         legal_moves = []
         for diag_direction in (-1, 0, 1):
-            move_length = 0
-            while move_length < max_range:
-                current_pos = (current_pos[0] + self.__direction(),
-                               current_pos[1] + diag_direction)
-                if not self.is_in_bounds(current_pos) or self.__is_occupied(current_pos):
+            for step in range(1, max_range + 1):
+                pos = (start_pos[0] + step * self.__direction(),
+                       start_pos[1] + step * diag_direction)
+                if not self.is_in_bounds(pos) or self.__is_occupied(pos):
                     break
-                legal_moves.append(current_pos)
-                move_length += 1
-            current_pos = stone_pos
+                legal_moves.append(pos)
         return legal_moves
 
     def reset(self, from_right):
