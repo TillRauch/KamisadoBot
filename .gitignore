@@ -1,6 +1,5 @@
 .idea/
 __pycache__/
 .pytest_cache/
-venv
-python/TillEngine.py
-python/MoritzEngine.py
+venv/
+*engine.py
