@@ -43,12 +43,12 @@ def test_is_in_bounds(preset_board):
 
 
 def test_illegal_moving_onto_stone(preset_board):
-    with pytest.raises(game.GameException, match='No moving onto stone'):
+    with pytest.raises(game.GameException, match='Cannot move onto stone'):
         preset_board.perform_move((0, 0))
 
 
 def test_illegal_forward_movement_first(preset_board):
-    with pytest.raises(game.GameException, match='Incorrect forward movement'):
+    with pytest.raises(game.GameException, match='Can only move forward'):
         preset_board.perform_move((6, 0))
 
 
@@ -60,12 +60,12 @@ def test_illegal_forward_movement_second():
     board.perform_move((5, 6))
     board.perform_move((4, 3))
     board.perform_move((3, 0))
-    with pytest.raises(game.GameException, match='Incorrect forward movement'):
+    with pytest.raises(game.GameException, match='Can only move forward'):
         board.perform_move((2, 3))
 
 
 def test_illegal_diagonal_movement(preset_board):
-    with pytest.raises(game.GameException, match='Move not along diagonal'):
+    with pytest.raises(game.GameException, match='Can only move straight or diagonally'):
         preset_board.perform_move((1, 1))
 
 
@@ -77,7 +77,7 @@ def test_illegal_move_over_stone_straight():
     board.perform_move((5, 2))
     board.perform_move((1, 7))
     board.perform_move((4, 5))
-    with pytest.raises(game.GameException, match='Piece in-between'):
+    with pytest.raises(game.GameException, match='Cannot move through pieces'):
         board.perform_move((6, 2))
 
 
@@ -87,7 +87,7 @@ def test_illegal_move_over_stone_diagonal():
     board.perform_move((5, 0))
     board.perform_move((2, 3))
     board.perform_move((4, 5))
-    with pytest.raises(game.GameException, match='Piece in-between'):
+    with pytest.raises(game.GameException, match='Cannot move through pieces'):
         board.perform_move((5, 6))
 
 

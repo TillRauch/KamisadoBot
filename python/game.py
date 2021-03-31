@@ -100,23 +100,23 @@ class Board:
         owner.stones[color] = target_pos
         self.__occupy(target_pos)
 
-    def __check_path_clear(self, start_pos, target_pos):
+    def __check_path(self, start_pos, target_pos):
         assert self.__is_occupied(start_pos), 'inconsistent state'
         if self.__is_occupied(target_pos):
-            raise GameException('No moving onto stone')
+            raise GameException('Cannot move onto stone')
         if self.__direction() * (target_pos[0] - start_pos[0]) <= 0:
-            raise GameException('Incorrect forward movement')
+            raise GameException('Can only move forward')
         row_path = range(start_pos[0] + self.__direction(), target_pos[0], self.__direction())
         # if line straight
         if start_pos[1] == target_pos[1]:
             col_path = [start_pos[1]] * len(row_path)
         else:
             if abs(start_pos[1] - target_pos[1]) != abs(start_pos[0] - target_pos[0]):
-                raise GameException('Move not along diagonal')
+                raise GameException('Can only move straight or diagonally')
             diag_direction = 1 if target_pos[1] > start_pos[1] else -1
             col_path = range(start_pos[1] + diag_direction, target_pos[1], diag_direction)
         if any(self.occupied[row][col] for row, col in zip(row_path, col_path)):
-            raise GameException('Piece in-between')
+            raise GameException('Cannot move through pieces')
 
     def __check_sumo(self, sumo_pos):
         sumo_level = self.current_player.sumo_levels[self.current_color]
@@ -167,7 +167,7 @@ class Board:
         sumo_level = self.current_player.sumo_levels[self.current_color]
         stone_pos = self.current_player.stones[self.current_color]
         try:
-            self.__check_path_clear(stone_pos, target_pos)
+            self.__check_path(stone_pos, target_pos)
         except GameException as e:
             is_one_step_move = target_pos[0] - stone_pos[0] == self.__direction()
             if sumo_level > 0 and is_one_step_move and stone_pos[1] == target_pos[1]:
