@@ -89,6 +89,17 @@ class Board:
     def __unoccupy(self, pos):
         self.occupied[pos[0]][pos[1]] = False
 
+    def __previous_pos(self, pos):
+        return pos[0] - self.__direction(), pos[1]
+
+    def __next_pos(self, pos):
+        return pos[0] + self.__direction(), pos[1]
+
+    def __move_stone(self, owner, color, target_pos):
+        self.__unoccupy(owner.stones[color])
+        owner.stones[color] = target_pos
+        self.__occupy(target_pos)
+
     def __check_path_clear(self, start_pos, target_pos):
         assert self.__is_occupied(start_pos), 'inconsistent state'
         if self.__is_occupied(target_pos):
@@ -107,46 +118,38 @@ class Board:
         if any(self.occupied[row][col] for row, col in zip(row_path, col_path)):
             raise GameException('Piece in-between')
 
-    def __process_round_winner(self, winner):
-        self.round_over = True
-        winner.sumo_levels[self.current_color] += 1
-        if winner.get_points() >= self.winning_points:
-            self.winner = winner
+    def __check_sumo(self, sumo_pos):
+        sumo_level = self.current_player.sumo_levels[self.current_color]
+        sumo_power = Board.SUMO_STATS['power'][sumo_level]
+        push_pos = self.__next_pos(sumo_pos)
+        while self.__is_occupied(push_pos):
+            if push_pos in self.current_player.stones:
+                raise GameException('Sumo cannot push own stone')
+            if abs(push_pos[0] - sumo_pos[0]) > sumo_power:
+                raise GameException('Sumo is pushing too many stones')
+            other = self.__other_player()
+            if other.sumo_levels[other.stones.index(push_pos)] >= sumo_level:
+                raise GameException('Sumo cannot push same strength sumo')
+            push_pos = self.__next_pos(push_pos)
+            if not self.is_in_bounds(push_pos):
+                raise GameException('Sumo cannot push off the board')
+        return push_pos
 
     def __sumo_cascade(self, sumo_pos, end_pos):
         def move_sumo(player, pos):
             self.__move_stone(player, player.stones.index(pos), self.__next_pos(pos))
         assert not self.__is_occupied(end_pos)
-        row_range = range(self.__next_pos(sumo_pos)[0], end_pos[0], self.__direction())
-        positions = [(row, sumo_pos[1]) for row in row_range]
-        for stone_pos in reversed(positions):
+        stone_pos = self.__previous_pos(end_pos)
+        while stone_pos != sumo_pos:
             move_sumo(self.__other_player(), stone_pos)
+            stone_pos = self.__previous_pos(stone_pos)
         move_sumo(self.current_player, sumo_pos)
 
-    def __move_stone(self, owner, color, target_pos):
-        self.__unoccupy(owner.stones[color])
-        owner.stones[color] = target_pos
-        self.__occupy(target_pos)
-
-    def __next_pos(self, pos):
-        return pos[0] + self.__direction(), pos[1]
-
-    def __check_sumo(self, sumo_pos):
-        sumo_level = self.current_player.sumo_levels[self.current_color]
-        sumo_power = Board.SUMO_STATS['power'][sumo_level]
-        iter_pos = self.__next_pos(sumo_pos)
-        while self.__is_occupied(iter_pos):
-            if iter_pos in self.current_player.stones:
-                raise GameException('Sumo cannot push own stone')
-            if abs(iter_pos[0] - sumo_pos[0]) > sumo_power:
-                raise GameException('Sumo is pushing too many stones')
-            other = self.__other_player()
-            if other.sumo_levels[other.stones.index(iter_pos)] >= sumo_level:
-                raise GameException('Sumo cannot push same strength sumo')
-            iter_pos = self.__next_pos(iter_pos)
-            if not self.is_in_bounds(iter_pos):
-                raise GameException('Sumo cannot push off the board')
-        return iter_pos
+    def __process_round_winner(self, winner):
+        self.round_over = True
+        winner.sumo_levels[self.current_color] += 1
+        if winner.get_points() >= self.winning_points:
+            self.winner = winner
 
     def set_color(self, color):
         if self.turn_count > 0:
