@@ -3,8 +3,6 @@ import math
 from PIL import Image, ImageDraw
 import game
 from numpy import linspace
-
-
 CELL_PIXELS = 100
 PIECE_RATIO = .8
 COLOR_RATIO = .4

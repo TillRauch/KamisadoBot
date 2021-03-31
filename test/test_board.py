@@ -160,12 +160,66 @@ def test_illegal_sumo_own_stone():
     board.fst_player.stones = [(4, 4), (3, 4), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7)]
     board.snd_player.stones = [(0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
 
-    board.fst_player.sumo_levels = [1, 0, 0, 0, 0, 0, 0, 0]
+    board.fst_player.sumo_levels[0] = 1
     board.set_color(0)
     __make_occupy_consistent(board)
 
     with pytest.raises(game.GameException, match='Sumo cannot push own stone'):
         board.perform_move((3, 4))
+
+def test_illegal_sumo_push_off_board():
+    board = game.Board()
+    board.fst_player.stones = [(2, 7), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7)]
+    board.snd_player.stones = [(0, 7), (1, 7), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
+
+    board.fst_player.sumo_levels[0] = 2
+    board.set_color(0)
+    __make_occupy_consistent(board)
+
+    with pytest.raises(game.GameException, match='Sumo cannot push off the board'):
+        board.perform_move((1, 7))
+
+def test_illegal_sumo_cant_push_other_sumo():
+    board = game.Board()
+    board.fst_player.stones = [(4, 3), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7)]
+    board.snd_player.stones = [(3, 3), (0, 4), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
+
+    board.fst_player.sumo_levels[0] = 1
+    board.snd_player.sumo_levels[0] = 1
+    board.set_color(0)
+    __make_occupy_consistent(board)
+
+    with pytest.raises(game.GameException, match='Sumo cannot push same strength sumo'):
+        board.perform_move((3, 3))
+
+def test_sumo_push_weaker_sumo():
+    board = game.Board()
+    board.fst_player.stones = [(4, 3), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7)]
+    board.snd_player.stones = [(3, 3), (0, 4), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
+
+    board.fst_player.sumo_levels[0] = 2
+    board.snd_player.sumo_levels[0] = 1
+    board.set_color(0)
+    __make_occupy_consistent(board)
+
+    board.perform_move((3, 3))
+
+    assert board.fst_player.stones == [(3, 3), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7)]
+    assert board.snd_player.stones == [(2, 3), (0, 4), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
+
+def test_sumo_max_off_board():
+    board = game.Board()
+    board.fst_player.stones = [(4, 7), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7)]
+    board.snd_player.stones = [(1, 7), (2, 7), (3, 7), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
+
+    board.fst_player.sumo_levels[0] = 3
+    board.set_color(0)
+    __make_occupy_consistent(board)
+    board.perform_move((3, 7))
+    assert board.fst_player.stones == [(3, 7), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7)]
+    assert board.snd_player.stones ==  [(0, 7), (1, 7), (2, 7), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
+    assert board.current_color == 0 # Braun
+
 
 
 def test_single_sumo():

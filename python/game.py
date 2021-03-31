@@ -143,6 +143,9 @@ class Board:
                 raise GameException('Sumo cannot push own stone')
             if abs(iter_pos[0] - sumo_pos[0]) > sumo_power + 1:
                 raise GameException('Sumo is pushing too many stones')
+            if iter_pos in self.__other_player().stones:
+                if self.__other_player().sumo_levels[self.__other_player().stones.index(iter_pos)] >= sumo_level:
+                    raise GameException('Sumo cannot push same strength sumo')
         return iter_pos
 
     def set_color(self, color):
