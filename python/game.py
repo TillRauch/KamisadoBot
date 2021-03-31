@@ -134,18 +134,18 @@ class Board:
     def __check_sumo(self, sumo_pos):
         sumo_level = self.current_player.sumo_levels[self.current_color]
         sumo_power = Board.SUMO_STATS['power'][sumo_level]
-        iter_pos = sumo_pos
+        iter_pos = self.__next_pos(sumo_pos)
         while self.__is_occupied(iter_pos):
+            if iter_pos in self.current_player.stones:
+                raise GameException('Sumo cannot push own stone')
+            if abs(iter_pos[0] - sumo_pos[0]) > sumo_power:
+                raise GameException('Sumo is pushing too many stones')
+            other = self.__other_player()
+            if other.sumo_levels[other.stones.index(iter_pos)] >= sumo_level:
+                raise GameException('Sumo cannot push same strength sumo')
             iter_pos = self.__next_pos(iter_pos)
             if not self.is_in_bounds(iter_pos):
                 raise GameException('Sumo cannot push off the board')
-            if iter_pos in self.current_player.stones:
-                raise GameException('Sumo cannot push own stone')
-            if abs(iter_pos[0] - sumo_pos[0]) > sumo_power + 1:
-                raise GameException('Sumo is pushing too many stones')
-            if iter_pos in self.__other_player().stones:
-                if self.__other_player().sumo_levels[self.__other_player().stones.index(iter_pos)] >= sumo_level:
-                    raise GameException('Sumo cannot push same strength sumo')
         return iter_pos
 
     def set_color(self, color):
