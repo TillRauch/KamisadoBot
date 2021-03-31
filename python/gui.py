@@ -20,19 +20,18 @@ def run():
         window.blit(img, (0, 0))
         pygame.display.update()
 
-    def render_fill_text():
-        choose_side_text = small_font.render('Fill from', True, (0,) * 3)
-        dialogue_box = pygame.draw.rect(window, (255, 255, 255), box_top_left + BOX_DIM)
-        window.blit(choose_side_text, (dialogue_box.centerx - choose_side_text.get_width() // 2,
-                                       dialogue_box.centery - choose_side_text.get_height() // 2 - dialogue_box.height // 3))
-
-        left_text = small_font.render('Left', True, (0,) * 3)
-        right_text = small_font.render('Right', True, (0,) * 3)
-        window.blit(left_text,
-                    (dialogue_box.left + TEXT_PADDING, dialogue_box.centery - left_text.get_height() // 2))
-        window.blit(right_text,
-                    (dialogue_box.right - right_text.get_width() - TEXT_PADDING,
-                     dialogue_box.centery - right_text.get_height() // 2))
+    def render_fill_menu():
+        text = small_font.render('Fill from', True, (0, 0, 0))
+        box = pygame.draw.rect(window, (255, 255, 255), box_top_left + BOX_DIM)
+        window.blit(text, (box.centerx - text.get_width() // 2,
+                           box.centery - text.get_height() // 2 - box.height // 3))
+        left_text = small_font.render('Left', True, (0, 0, 0))
+        right_text = small_font.render('Right', True, (0, 0, 0))
+        left_text_coords = box.left + TEXT_PADDING, box.centery - left_text.get_height() // 2
+        right_text_coords = (box.right - right_text.get_width() - TEXT_PADDING,
+                             box.centery - right_text.get_height() // 2)
+        window.blit(left_text, left_text_coords)
+        window.blit(right_text, right_text_coords)
         pygame.display.update()
 
     def handle_round_end():
@@ -44,7 +43,7 @@ def run():
             pygame.display.update()
             pygame.time.wait(5 * 1000)
         else:
-            render_fill_text()
+            render_fill_menu()
 
     def handle_round():
         if board.current_color is None:
