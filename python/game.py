@@ -118,8 +118,10 @@ class Board:
         if any(self.occupied[row][col] for row, col in zip(row_path, col_path)):
             raise GameException('Cannot move through pieces')
 
-    def __check_sumo(self, target_pos):
-        sumo_level = self.current_player.sumo_levels[self.current_color]
+    def __check_sumo(self, target_pos, color=None):
+        if color is None:
+            color = self.current_color
+        sumo_level = self.current_player.sumo_levels[color]
         sumo_power = Board.SUMO_STATS['power'][sumo_level]
         push_pos = target_pos
         while self.__is_occupied(push_pos):
@@ -193,12 +195,14 @@ class Board:
                 set_current_color_and_player()
                 self.__process_round_winner(self.current_player)
 
-    def get_legal_moves(self):
+    def get_legal_moves(self, color=None):
+        if color is None:
+            color = self.current_color
         if self.round_over or self.current_color is None:
             return []
-        sumo_level = self.current_player.sumo_levels[self.current_color]
+        sumo_level = self.current_player.sumo_levels[color]
         max_range = Board.SUMO_STATS['range'][sumo_level]
-        start_pos = self.current_player.stones[self.current_color]
+        start_pos = self.current_player.stones[color]
         legal_moves = []
         for diag_direction in (-1, 0, 1):
             for step in range(1, max_range + 1):
@@ -207,10 +211,10 @@ class Board:
                 if not Board.is_in_bounds(pos):
                     break
                 if self.__is_occupied(pos):
-                    sumo_level = self.current_player.sumo_levels[self.current_color]
+                    sumo_level = self.current_player.sumo_levels[color]
                     if sumo_level > 0 and step == 1 and diag_direction == 0:
                         try:
-                            self.__check_sumo(pos)
+                            self.__check_sumo(pos, color)
                         except GameException:
                             pass
                         else:
