@@ -118,14 +118,14 @@ class Board:
         if any(self.occupied[row][col] for row, col in zip(row_path, col_path)):
             raise GameException('Cannot move through pieces')
 
-    def __check_sumo(self, sumo_pos):
+    def __check_sumo(self, target_pos):
         sumo_level = self.current_player.sumo_levels[self.current_color]
         sumo_power = Board.SUMO_STATS['power'][sumo_level]
-        push_pos = self.__next_pos(sumo_pos)
+        push_pos = target_pos
         while self.__is_occupied(push_pos):
             if push_pos in self.current_player.stones:
                 raise GameException('Sumo cannot push own stone')
-            if abs(push_pos[0] - sumo_pos[0]) > sumo_power:
+            if abs(push_pos[0] - target_pos[0]) >= sumo_power:
                 raise GameException('Sumo is pushing too many stones')
             other = self.__other_player()
             if other.sumo_levels[other.stones.index(push_pos)] >= sumo_level:
@@ -171,7 +171,7 @@ class Board:
         except GameException as e:
             is_one_step_move = target_pos[0] - stone_pos[0] == self.__direction()
             if sumo_level > 0 and is_one_step_move and stone_pos[1] == target_pos[1]:
-                target_pos = self.__check_sumo(stone_pos)
+                target_pos = self.__check_sumo(target_pos)
                 self.__sumo_cascade(stone_pos, target_pos)
             else:
                 raise e
@@ -208,7 +208,7 @@ class Board:
                     sumo_level = self.current_player.sumo_levels[self.current_color]
                     if sumo_level > 0 and step == 1 and diag_direction == 0:
                         try:
-                            self.__check_sumo(start_pos)
+                            self.__check_sumo(pos)
                         except GameException:
                             pass
                         else:
