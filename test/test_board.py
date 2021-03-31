@@ -254,3 +254,20 @@ def test_rare_crash():
     for move in move_list:
         board.perform_move(move)
     board.perform_move((4, 3))
+
+def test_puzzle_all_out():
+    # Reference: https://www.boardgamegeek.com/thread/368421
+    board = game.Board()
+    board.fst_player.stones = [(4, 0), (5, 0), (3, 0), (6, 3), (4, 4), (4, 6), (1, 6), (6, 7)] # black
+    board.snd_player.stones = [(4, 5), (1, 5), (3, 5), (3, 1), (3, 3), (5, 2), (1, 0), (3, 2)] # gold
+    board.set_color(6)
+    board.current_player = board.snd_player
+    __make_occupy_consistent(board)
+
+    assert set(board.get_legal_moves()) == {(2, 0), (2, 1)}
+    board.perform_move((2, 0))
+    assert set(board.get_legal_moves()) == {(4, 1)}
+    board.perform_move((4, 1))
+    assert board.round_over
+    assert board.snd_player.sumo_levels == [0, 0, 1, 0, 0, 0, 0, 0]
+
