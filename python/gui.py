@@ -52,6 +52,7 @@ def run():
                 board.set_color(board.current_player.stones.index(pos))
                 update_image()
         else:
+            print(pos)
             try:
                 board.perform_move(pos)
             except game.GameException:

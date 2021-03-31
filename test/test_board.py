@@ -240,3 +240,17 @@ def test_double_sumo():
     assert board.snd_player.stones == [(2, 4), (1, 4), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
     assert board.current_player == board.snd_player
     assert board.current_color == 6  # Blau
+
+
+def test_rare_crash():
+    board = game.Board()
+    board.fst_player.stones = [(3, 4), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7)]
+    board.snd_player.stones = [(2, 4), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
+    board.fst_player.sumo_levels = [1, 0, 0, 0, 0, 0, 0, 0]
+    board.set_color(0)
+    __make_occupy_consistent(board)
+    move_list = [(2, 4), (4, 1), (2, 2), (2, 0), (5, 1),
+                 (1, 3), (4, 2), (1, 6), (1, 4)]
+    for move in move_list:
+        board.perform_move(move)
+    board.perform_move((4, 3))

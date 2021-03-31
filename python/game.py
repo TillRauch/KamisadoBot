@@ -162,6 +162,8 @@ class Board:
             self.current_player = self.__other_player()
         if self.current_color is None:
             raise GameException('Must set a color first')
+        if not self.is_in_bounds(target_pos):
+            raise GameException('Cannot move stone out of bounds')
         sumo_level = self.current_player.sumo_levels[self.current_color]
         stone_pos = self.current_player.stones[self.current_color]
         try:
@@ -206,7 +208,7 @@ class Board:
                     sumo_level = self.current_player.sumo_levels[self.current_color]
                     if sumo_level > 0 and step == 1 and diag_direction == 0:
                         try:
-                            self.__check_sumo(pos)
+                            self.__check_sumo(start_pos)
                         except GameException:
                             pass
                         else:

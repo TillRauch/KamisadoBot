@@ -3,6 +3,8 @@ import math
 from PIL import Image, ImageDraw
 import game
 from numpy import linspace
+
+
 CELL_PIXELS = 100
 PIECE_RATIO = .8
 COLOR_RATIO = .4
@@ -13,9 +15,9 @@ COLOR_BOUNDING = int(CELL_PIXELS / 2 * (1 - COLOR_RATIO))
 PIECE_BOUNDING = int(CELL_PIXELS / 2 * (1 - PIECE_RATIO))
 SHADOW_PIXELS = int(SHADOW_RATIO * CELL_PIXELS)
 
-SUMO_SPIKE_SIZE = 7
-SUMO_SPIKE_GROUP_COUNT = 4
-SUMO_SPIKE_OFFSET = 18
+SPIKE_GROUPS = 4
+SPIKE_SIZE = 7
+SPIKE_OFFSET = 18  # in degrees
 
 
 player_colors = {
@@ -55,12 +57,12 @@ def draw_board(board):
         cell_center = bounding_box(CELL_PIXELS / 2 - SHADOW_PIXELS, 0)[0]
         triangle_coords = (cell_center[0] - math.sin(rotation) * circle_radius,
                            cell_center[1] - math.cos(rotation) * circle_radius)
-        return [triangle_coords, SUMO_SPIKE_SIZE]
+        return [triangle_coords, SPIKE_SIZE]
 
     def draw_spikes():
         sumo_level = player.sumo_levels[color]
-        max_spike_offset = (sumo_level - 1) * math.radians(SUMO_SPIKE_OFFSET) / 2
-        for base_rotation in linspace(0, 2 * math.pi, SUMO_SPIKE_GROUP_COUNT, endpoint=False):
+        max_spike_offset = (sumo_level - 1) * math.radians(SPIKE_OFFSET) / 2
+        for base_rotation in linspace(0, 2 * math.pi, SPIKE_GROUPS, endpoint=False):
             for spike_offset in linspace(-max_spike_offset, max_spike_offset, sumo_level):
                 rotation = base_rotation + spike_offset
                 draw.regular_polygon(bounding_circle(rotation), 3, rotation=math.degrees(rotation),
