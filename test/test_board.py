@@ -242,7 +242,7 @@ def test_double_sumo():
     assert board.current_color == 6  # Blau
 
 
-def test_rare_crash():
+def test_sumo_on_second_last_row():
     board = game.Board()
     board.fst_player.stones = [(3, 4), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7)]
     board.snd_player.stones = [(2, 4), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]
@@ -254,6 +254,8 @@ def test_rare_crash():
     for move in move_list:
         board.perform_move(move)
     board.perform_move((4, 3))
+    assert board.current_color == 6
+
 
 def test_puzzle_all_out():
     # Reference: https://www.boardgamegeek.com/thread/368421
@@ -270,4 +272,3 @@ def test_puzzle_all_out():
     board.perform_move((4, 1))
     assert board.round_over
     assert board.snd_player.sumo_levels == [0, 0, 1, 0, 0, 0, 0, 0]
-
