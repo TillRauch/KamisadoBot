@@ -189,6 +189,7 @@ class Board:
             target_pos = self.current_player.stones[self.current_color]
             set_current_color_and_player()  # now current player is 0
             if not self.get_legal_moves():  # deadlock, causing player 0 loses, player 1 wins
+                self.current_color = Board.get_board_color(self.current_player.stones[self.current_color])
                 self.__process_round_winner(self.__other_player())
 
     def get_legal_moves(self):
