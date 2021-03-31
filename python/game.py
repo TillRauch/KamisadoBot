@@ -80,6 +80,12 @@ class Board:
     def __direction(self):
         return 1 if self.current_player.start_row == 0 else -1
 
+    def __next_pos(self, pos):
+        return pos[0] + self.__direction(), pos[1]
+
+    def __previous_pos(self, pos):
+        return pos[0] - self.__direction(), pos[1]
+
     def __is_occupied(self, pos):
         return self.occupied[pos[0]][pos[1]]
 
@@ -88,12 +94,6 @@ class Board:
 
     def __unoccupy(self, pos):
         self.occupied[pos[0]][pos[1]] = False
-
-    def __previous_pos(self, pos):
-        return pos[0] - self.__direction(), pos[1]
-
-    def __next_pos(self, pos):
-        return pos[0] + self.__direction(), pos[1]
 
     def __move_stone(self, owner, color, target_pos):
         self.__unoccupy(owner.stones[color])
@@ -190,8 +190,7 @@ class Board:
                 self.__process_round_winner(self.__other_player())
 
     def get_legal_moves(self):
-        # if game over or color has not been set
-        if self.winner is not None or self.current_color is None:
+        if self.round_over or self.current_color is None:
             return []
         sumo_level = self.current_player.sumo_levels[self.current_color]
         max_range = Board.SUMO_STATS['range'][sumo_level]
